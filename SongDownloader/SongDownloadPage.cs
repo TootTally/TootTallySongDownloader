@@ -65,7 +65,7 @@ namespace TootTallySongDownloader
                 {
                     TootTallyNotifManager.DisplayNotif("New tracks detected, Reloading songs...\nLagging is normal.");
                     _newDownloadedTrackRefs.Clear();
-                    Plugin.Instance.Invoke("ReloadTracks", 0.35f);
+                    TootTallyCore.Plugin.Instance.Invoke("ReloadTracks", 0.35f);
                 }
             });
             _scrollableSliderHandler.accelerationMult = 0.09f;
