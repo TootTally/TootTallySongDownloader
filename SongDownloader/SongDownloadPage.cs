@@ -28,9 +28,19 @@ namespace TootTallySongDownloader
         private List<SongDownloadObject> _downloadObjectList;
 
 
-        public SongDownloadPage() : base("MoreSongs", "More Songs", 20f, new Color(0, 0, 0, 0.1f))
+        public SongDownloadPage() : base("MoreSongs", "More Songs", 20f, new Color(0, 0, 0, 0.1f), GetButtonColors)
         {
         }
+
+        private static ColorBlock GetButtonColors => new ColorBlock()
+        {
+            normalColor = new Color(.20f, .20f, 1),
+            highlightedColor = new Color(.15f, .15f, .65f),
+            pressedColor = new Color(.5f, .5f, .75f),
+            selectedColor = new Color(.20f, .20f, 1),
+            fadeDuration = .08f,
+            colorMultiplier = 1
+        };
 
         public override void Initialize()
         {
