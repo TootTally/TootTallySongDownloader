@@ -50,6 +50,9 @@ namespace TootTallySongDownloader
         {
             AssetManager.LoadAssets(Path.Combine(Path.GetDirectoryName(Instance.Info.Location), "Assets"));
             settingPage = TootTallySettingsManager.AddNewPage(new SongDownloadPage());
+
+            TootTallySettings.Plugin.TryAddThunderstoreIconToPageButton(Instance.Info.Location, Name, settingPage);
+
             LogInfo($"Module loaded!");
         }
 
