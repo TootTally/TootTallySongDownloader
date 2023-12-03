@@ -51,18 +51,18 @@ namespace TootTallySongDownloader
 
             _inputField = TootTallySettingObjectFactory.CreateInputField(_fullPanel.transform, $"{name}InputField", DEFAULT_OBJECT_SIZE, DEFAULT_FONTSIZE, DEFAULT_INPUT_TEXT, false);
             _inputField.onSubmit.AddListener((value) => Search(_inputField.text));
-            _inputField.GetComponent<RectTransform>().anchoredPosition = new Vector2(1375, 750);
+            _inputField.GetComponent<RectTransform>().anchorMin = _inputField.GetComponent<RectTransform>().anchorMax = new Vector2(.72f, .7f);
 
             _loadingIcon = GameObjectFactory.CreateLoadingIcon(_fullPanel.transform, new Vector2(-300, -75), new Vector2(128, 128), AssetManager.GetSprite("icon.png"), false, "SongSearchLoadingSwirly");
 
             _searchButton = GameObjectFactory.CreateCustomButton(_fullPanel.transform, new Vector2(-375, -175), DEFAULT_OBJECT_SIZE, "Search", $"{name}SearchButton", () => Search(_inputField.text)).gameObject;
 
             _toggleRated = TootTallySettingObjectFactory.CreateToggle(_fullPanel.transform, $"{name}ToggleRated", new Vector2(200, 60), "Rated", null);
-            _toggleRated.GetComponent<RectTransform>().anchoredPosition = new Vector2(-725, -450);
+            _toggleRated.GetComponent<RectTransform>().anchorMin = _toggleRated.GetComponent<RectTransform>().anchorMax = new Vector2(.63f, .58f);
             _toggleRated.onValueChanged.AddListener(value => { if (value) _toggleUnrated.SetIsOnWithoutNotify(!value); });
 
             _toggleUnrated = TootTallySettingObjectFactory.CreateToggle(_fullPanel.transform, $"{name}ToggleUnrated", new Vector2(200, 60), "Unrated", null);
-            _toggleUnrated.GetComponent<RectTransform>().anchoredPosition = new Vector2(-725, -550);
+            _toggleUnrated.GetComponent<RectTransform>().anchorMin = _toggleUnrated.GetComponent<RectTransform>().anchorMax = new Vector2(.63f, .5f);
             _toggleUnrated.onValueChanged.AddListener(value => { if (value) _toggleRated.SetIsOnWithoutNotify(!value); });
 
             _downloadAllButton = GameObjectFactory.CreateCustomButton(_fullPanel.transform, new Vector2(-1330, -87), new Vector2(200, 60), "Download All", "DownloadAllButton", DownloadAll).gameObject;
