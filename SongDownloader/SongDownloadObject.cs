@@ -41,16 +41,16 @@ namespace TootTallySongDownloader
             var time = TimeSpan.FromSeconds(song.song_length);
             var stringTime = $"{(time.Hours != 0 ? (time.Hours + ":") : "")}{(time.Minutes != 0 ? time.Minutes : "0")}:{(time.Seconds != 0 ? time.Seconds : "00"):00}";
 
-            var songNameText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "SongName", song.name, Color.white);
-            var charterText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "Charter", song.charter != null ? $"Mapped by {song.charter}" : "Unknown", Color.white);
-            _durationText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "Duration", stringTime, Color.white);
-            _fileSizeText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "FileSize", "", Color.white);
+            var songNameText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "SongName", song.name);
+            var charterText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "Charter", song.charter != null ? $"Mapped by {song.charter}" : "Unknown");
+            _durationText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "Duration", stringTime);
+            _fileSizeText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "FileSize", "");
             _fileSizeText.GetComponent<RectTransform>().sizeDelta = new Vector2(100, 128);
             _fileSizeText.gameObject.SetActive(false);
             //fuck that shit :skull:
             songNameText.GetComponent<RectTransform>().sizeDelta = charterText.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 128);
             _durationText.GetComponent<RectTransform>().sizeDelta = new Vector2(230, 128);
-            songNameText.overflowMode = charterText.overflowMode = _durationText.overflowMode = TMPro.TextOverflowModes.Ellipsis;
+            songNameText.overflowMode = charterText.overflowMode = _durationText.overflowMode = TextOverflowModes.Ellipsis;
 
 
             //lol
@@ -106,7 +106,7 @@ namespace TootTallySongDownloader
 
         public void DisplayNotAvailableText(int siblingIndex = -1)
         {
-            var notAvailableText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "N/A", "N/A", Color.white);
+            var notAvailableText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "N/A", "N/A");
             notAvailableText.GetComponent<RectTransform>().sizeDelta = new Vector2(64, 128);
             notAvailableText.overflowMode = TextOverflowModes.Overflow;
             notAvailableText.enableWordWrapping = false;
@@ -116,7 +116,7 @@ namespace TootTallySongDownloader
 
         public void DisplayOwnedText()
         {
-            var ownedText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "Owned", "Owned", Color.white);
+            var ownedText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "Owned", "Owned");
             ownedText.GetComponent<RectTransform>().sizeDelta = new Vector2(64, 128);
             ownedText.overflowMode = TMPro.TextOverflowModes.Overflow;
             ownedText.enableWordWrapping = false;
@@ -151,7 +151,7 @@ namespace TootTallySongDownloader
 
                     FileHelper.DeleteFile(downloadDir, fileName);
 
-                    var t4 = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "Owned", "Owned", Color.white);
+                    var t4 = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "Owned", "Owned");
                     t4.GetComponent<RectTransform>().sizeDelta = new Vector2(64, 128);
                     t4.overflowMode = TMPro.TextOverflowModes.Overflow;
                     t4.enableWordWrapping = false;
