@@ -28,7 +28,7 @@ namespace TootTallySongDownloader
         private ProgressBar _progressBar;
         private TMP_Text _fileSizeText;
         private TMP_Text _durationText;
-        public bool isDownloadAvailable;
+        public bool isDownloadAvailable, isOwned;
         private Coroutine _fileSizeCoroutine;
 
         public SongDownloadObject(Transform canvasTransform, SongDataFromDB song, SongDownloadPage page) : base($"Song{song.track_ref}", page)
@@ -116,11 +116,14 @@ namespace TootTallySongDownloader
 
         public void DisplayOwnedText()
         {
+            isOwned = true;
             var ownedText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "Owned", "Owned");
             ownedText.GetComponent<RectTransform>().sizeDelta = new Vector2(64, 128);
             ownedText.overflowMode = TMPro.TextOverflowModes.Overflow;
             ownedText.enableWordWrapping = false;
         }
+
+        public void SetActive(bool active) => _songRow.SetActive(active);
 
         public override void Dispose()
         {
@@ -152,12 +155,15 @@ namespace TootTallySongDownloader
                     FileHelper.DeleteFile(downloadDir, fileName);
 
                     var t4 = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "Owned", "Owned");
+                    isOwned = true;
                     t4.GetComponent<RectTransform>().sizeDelta = new Vector2(64, 128);
                     t4.overflowMode = TMPro.TextOverflowModes.Overflow;
                     t4.enableWordWrapping = false;
                     t4.transform.SetSiblingIndex(3);
                     _durationText.GetComponent<RectTransform>().sizeDelta = new Vector2(230, 128);
-                    (_page as SongDownloadPage).AddTrackRefToDownloadedSong(_song.track_ref);
+                    var page = _page as SongDownloadPage;
+                    page.AddTrackRefToDownloadedSong(_song.track_ref);
+                    SetActive(!page.ShowNotOwnedOnly);
                 }
                 else
                 {

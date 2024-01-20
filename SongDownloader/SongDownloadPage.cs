@@ -20,12 +20,13 @@ namespace TootTallySongDownloader
         private GameObject _searchButton;
         private GameObject _nextButton, _prevButton;
         private GameObject _downloadAllButton;
-        private Toggle _toggleRated, _toggleUnrated;
+        private Toggle _toggleRated, _toggleUnrated, _toggleNotOwned;
         private LoadingIcon _loadingIcon;
         internal GameObject songRowPrefab;
         private List<string> _trackRefList;
         private List<string> _newDownloadedTrackRefs;
         private List<SongDownloadObject> _downloadObjectList;
+        public bool ShowNotOwnedOnly => _toggleNotOwned.isOn;
 
 
         public SongDownloadPage() : base("MoreSongs", "More Songs", 20f, new Color(0, 0, 0, 0.1f), GetButtonColors)
@@ -64,6 +65,10 @@ namespace TootTallySongDownloader
             _toggleUnrated = TootTallySettingObjectFactory.CreateToggle(_fullPanel.transform, $"{name}ToggleUnrated", new Vector2(200, 60), "Unrated", null);
             _toggleUnrated.GetComponent<RectTransform>().anchorMin = _toggleUnrated.GetComponent<RectTransform>().anchorMax = new Vector2(.63f, .5f);
             _toggleUnrated.onValueChanged.AddListener(value => { if (value) _toggleRated.SetIsOnWithoutNotify(!value); });
+
+            _toggleNotOwned = TootTallySettingObjectFactory.CreateToggle(_fullPanel.transform, $"{name}ToggleNotOwned", new Vector2(200, 60), "Not Owned", null);
+            _toggleNotOwned.GetComponent<RectTransform>().anchorMin = _toggleNotOwned.GetComponent<RectTransform>().anchorMax = new Vector2(.63f, .42f);
+            _toggleNotOwned.onValueChanged.AddListener(OnNotOwnedToggle);
 
             _downloadAllButton = GameObjectFactory.CreateCustomButton(_fullPanel.transform, new Vector2(-1330, -87), new Vector2(200, 60), "Download All", "DownloadAllButton", DownloadAll).gameObject;
             _downloadAllButton.SetActive(false);
@@ -152,8 +157,14 @@ namespace TootTallySongDownloader
             if (_trackRefList.Contains(song.track_ref)) return;
             _trackRefList.Add(song.track_ref);
             var songDownloadObj = new SongDownloadObject(gridPanel.transform, song, this);
+            songDownloadObj.SetActive(!(_toggleNotOwned.isOn && songDownloadObj.isOwned));
             _downloadObjectList.Add(songDownloadObj);
             AddSettingObjectToList(songDownloadObj);
+        }
+
+        private void OnNotOwnedToggle(bool value)
+        {
+            _downloadObjectList.ForEach(x => x.SetActive(!(value && x.isOwned)));
         }
 
         public void SetSongRowPrefab()
