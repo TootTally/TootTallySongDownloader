@@ -17,7 +17,8 @@ namespace TootTallySongDownloader
 {
     internal class SongDownloadObject : BaseTootTallySettingObject
     {
-        private const string _DOWNLOAD_MIRROR_LINK = "https://sgp1.digitaloceanspaces.com/toottally/chartmirrors/";
+        private const string _DOWNLOAD_MIRROR_LINK = "https://toottally.sgp1.digitaloceanspaces.com/toottally/chartmirrors/";
+        private const string _PIXELDRAIN_DOWNLOAD_LINK = "https://pixeldrain.com/api/file/";
         private const string _DISCORD_DOWNLOAD_HEADER = "https://cdn.discordapp.com/";
         private const string _GOOGLEDRIVE_LINK_HEADER = "https://drive.google.com/file/d/";
         private const string _GOOGLEDRIVE_DOWNLOAD_HEADER = "https://drive.google.com/uc?export=download&id=";
@@ -65,8 +66,8 @@ namespace TootTallySongDownloader
                         if (fileData != null)
                         {
                             DisplaySizeFileText(fileData.size);
-                            if (fileData.extension != "zip")
-                                DisplayNotAvailableText(4);
+                            if (!fileData.extension.Contains("zip"))
+                                DisplayNotAvailableText($"File is not zip: {fileData.extension}.", 4);
                             else
                             {
                                 _fileSizeCoroutine = null;
@@ -79,13 +80,13 @@ namespace TootTallySongDownloader
                         }
                         else
                         {
-                            DisplayNotAvailableText(3);
+                            DisplayNotAvailableText($"Couldn't access file at {link}", 3);
                         }
                         
                     }));
                 }
                 else
-                    DisplayNotAvailableText();
+                    DisplayNotAvailableText("No download link found.");
             }
             else
                 DisplayOwnedText();
@@ -104,8 +105,9 @@ namespace TootTallySongDownloader
             _durationText.GetComponent<RectTransform>().sizeDelta = new Vector2(100, 128);
         }
 
-        public void DisplayNotAvailableText(int siblingIndex = -1)
+        public void DisplayNotAvailableText(string error, int siblingIndex = -1)
         {
+            Plugin.LogWarning($"{_song.track_ref} cannot be downloaded: {error}");
             var notAvailableText = GameObjectFactory.CreateSingleText(_songRowContainer.transform, "N/A", "N/A");
             notAvailableText.GetComponent<RectTransform>().sizeDelta = new Vector2(64, 128);
             notAvailableText.overflowMode = TextOverflowModes.Overflow;

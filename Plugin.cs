@@ -28,6 +28,7 @@ namespace TootTallySongDownloader
         public static TootTallySettingPage settingPage;
 
         public static void LogInfo(string msg) => Instance.Logger.LogInfo(msg);
+        public static void LogWarning(string msg) => Instance.Logger.LogWarning(msg);
         public static void LogError(string msg) => Instance.Logger.LogError(msg);
 
         private void Awake()
