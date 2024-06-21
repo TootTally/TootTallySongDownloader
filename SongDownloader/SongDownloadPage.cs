@@ -51,7 +51,7 @@ namespace TootTallySongDownloader
             _downloadObjectList = new List<SongDownloadObject>();
 
             _inputField = TootTallySettingObjectFactory.CreateInputField(_fullPanel.transform, $"{name}InputField", DEFAULT_OBJECT_SIZE, DEFAULT_FONTSIZE, DEFAULT_INPUT_TEXT, false);
-            _inputField.onSubmit.AddListener((value) => Search(_inputField.text));
+            _inputField.onSubmit.AddListener(value => Search(_inputField.text));
             _inputField.GetComponent<RectTransform>().anchorMin = _inputField.GetComponent<RectTransform>().anchorMax = new Vector2(.72f, .7f);
 
             _loadingIcon = GameObjectFactory.CreateLoadingIcon(_fullPanel.transform, new Vector2(-300, -75), new Vector2(128, 128), AssetManager.GetSprite("icon.png"), false, "SongSearchLoadingSwirly");
