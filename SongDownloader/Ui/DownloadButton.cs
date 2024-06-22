@@ -1,6 +1,10 @@
 #nullable enable
 
+using System;
+using TMPro;
+using TootTallyCore.Graphics;
 using TootTallyCore.Utils.Assets;
+using TootTallyCore.Utils.Helpers;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,12 +15,38 @@ public class DownloadButton
     private readonly GameObject _gameObject;
     private RectTransform Transform => (RectTransform)_gameObject.transform;
 
+    private readonly Button _button;
+    private readonly Image _fillImage;
+    private readonly Image _downloadIconImage;
+    private readonly TMP_Text _filesizeText;
+    private readonly Image _altIconImage;
+    private readonly LoadingIcon _loadingIcon;
+    private readonly ProgressPieGraphic _progressPie;
+
+    private DownloadState _downloadState = new DownloadState.Waiting();
+
     /// <summary>
     /// Private ctor, use <c>Create</c> instead
     /// </summary>
-    private DownloadButton(GameObject gameObject)
+    private DownloadButton(
+        GameObject gameObject,
+        Button button,
+        Image fillImage,
+        Image downloadIconImage,
+        TMP_Text filesizeText,
+        Image altIconImage,
+        LoadingIcon loadingIcon,
+        ProgressPieGraphic progressPie
+    )
     {
         _gameObject = gameObject;
+        _button = button;
+        _fillImage = fillImage;
+        _downloadIconImage = downloadIconImage;
+        _filesizeText = filesizeText;
+        _altIconImage = altIconImage;
+        _loadingIcon = loadingIcon;
+        _progressPie = progressPie;
     }
 
     internal static DownloadButton Create()
@@ -26,8 +56,11 @@ public class DownloadButton
         // |
         // +- Fill
         // +- Border
-        // +- Icon
-        // +- TODO: Add filesize, loading spinner, other icons?
+        // +- DownloadIcon
+        // +- FilesizeText
+        // +- AltIcon
+        // +- LoadingIcon
+        // +- ProgressPie
         // ======================================
 
         // Create body ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,29 +145,193 @@ public class DownloadButton
         borderImage.type = Image.Type.Sliced;
         borderImage.color = new Color(0.910f, 0.212f, 0.333f); // TODO: Use theme colors
 
-        // Create icon /////////////////////////////////////////////////////////////////////////////////////////////////
-        var iconGo = new GameObject(
-            "Icon",
+        // Create main download icon ///////////////////////////////////////////////////////////////////////////////////
+        // Just an icon that isn't the main download icon
+        var downloadIconGo = new GameObject(
+            "DownloadIcon",
             typeof(RectTransform),
             typeof(Image)
         );
+        downloadIconGo.SetActive(false);
+
+        var downloadIconImage = downloadIconGo.GetComponent<Image>();
+        downloadIconImage.sprite = AssetManager.GetSprite("Download64.png");
+
+        // Center-ish the icon
+        // (the icon is placed a bit above the center to make room for the filesize text)
+        var downloadIconTf = (RectTransform)downloadIconGo.transform;
+        downloadIconTf.SetParent(bodyTf, false);
+        downloadIconTf.anchorMin = new Vector2(0.5f, 0.5f);
+        downloadIconTf.anchorMax = new Vector2(0.5f, 0.5f);
+        downloadIconTf.offsetMin = new Vector2(-18f, -18f + 8f);
+        downloadIconTf.offsetMax = new Vector2(18f, 18f + 8f);
+
+        // Create filesize text ////////////////////////////////////////////////////////////////////////////////////////
+        var filesizeText = GameObjectFactory.CreateSingleText(bodyTf, "FilesizeText", "12.3 MB");
+        filesizeText.gameObject.SetActive(false);
+
+        var filesizeTf = filesizeText.rectTransform!;
+        filesizeTf.anchorMin = new Vector2(0f, 0f);
+        filesizeTf.anchorMax = new Vector2(1f, 0f);
+        filesizeTf.offsetMin = new Vector2(4f, 4f);
+        filesizeTf.offsetMax = new Vector2(-4f, 24f);
+
+        filesizeText.fontSize = 14f;
+        filesizeText.alignment = TextAlignmentOptions.Bottom;
+        filesizeText.overflowMode = TextOverflowModes.Masking;
+        filesizeText.enableWordWrapping = false;
+
+        // Create alt icon /////////////////////////////////////////////////////////////////////////////////////////////
+        // Just an icon that isn't the main download icon
+        var altIconGo = new GameObject(
+            "AltIcon",
+            typeof(RectTransform),
+            typeof(Image)
+        );
+        altIconGo.SetActive(false);
 
         // Center the icon
-        var iconTf = (RectTransform)iconGo.transform;
-        iconTf.SetParent(bodyTf, false);
-        iconTf.anchorMin = new Vector2(0.5f, 0.5f);
-        iconTf.anchorMax = new Vector2(0.5f, 0.5f);
-        iconTf.offsetMin = new Vector2(-24f, -24f);
-        iconTf.offsetMax = new Vector2(24f, 24f);
+        var altIconTf = (RectTransform)altIconGo.transform;
+        altIconTf.SetParent(bodyTf, false);
+        altIconTf.anchorMin = new Vector2(0.5f, 0.5f);
+        altIconTf.anchorMax = new Vector2(0.5f, 0.5f);
+        altIconTf.offsetMin = new Vector2(-24f, -24f);
+        altIconTf.offsetMax = new Vector2(24f, 24f);
 
-        iconGo.GetComponent<Image>().sprite = AssetManager.GetSprite("Download64.png");
+        // Create loading icon /////////////////////////////////////////////////////////////////////////////////////////
+        var loadingIcon = GameObjectFactory.CreateLoadingIcon(
+            bodyTf,
+            Vector2.zero,
+            new Vector2(48f, 48f),
+            AssetManager.GetSprite("IconMono.png"),
+            true,
+            "LoadingIcon"
+        );
+        var loadingIconTf = (RectTransform)loadingIcon.iconHolder.transform;
+        loadingIconTf.anchorMin = new Vector2(0.5f, 0.5f);
+        loadingIconTf.anchorMax = new Vector2(0.5f, 0.5f);
+        loadingIconTf.offsetMin = new Vector2(-24f, -24f);
+        loadingIconTf.offsetMax = new Vector2(24f, 24f);
 
-        return new DownloadButton(bodyGo);
+        // Create progress pie /////////////////////////////////////////////////////////////////////////////////////////
+        // Used when the chart is downloading
+        var progressPieGo = new GameObject(
+            "ProgressPie",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(ProgressPieGraphic)
+        );
+        progressPieGo.SetActive(false);
+
+        // Center the pie
+        var progressPieTf = (RectTransform)progressPieGo.transform;
+        progressPieTf.SetParent(bodyTf, false);
+        progressPieTf.anchorMin = new Vector2(0.5f, 0.5f);
+        progressPieTf.anchorMax = new Vector2(0.5f, 0.5f);
+        progressPieTf.offsetMin = new Vector2(-24f, -24f);
+        progressPieTf.offsetMax = new Vector2(24f, 24f);
+
+        return new DownloadButton(
+            gameObject: bodyGo,
+            button: button,
+            fillImage: fillImage,
+            downloadIconImage: downloadIconImage,
+            filesizeText: filesizeText,
+            altIconImage: altIconGo.GetComponent<Image>(),
+            loadingIcon: loadingIcon,
+            progressPie: progressPieGo.GetComponent<ProgressPieGraphic>()
+        );
     }
 
     internal DownloadButton WithParent(Transform parent)
     {
         Transform.SetParent(parent, false);
         return this;
+    }
+
+    internal DownloadButton WithFilesize(long numBytes)
+    {
+        _filesizeText.text = FileHelper.SizeSuffix(numBytes, 1);
+        return this;
+    }
+
+    internal DownloadButton WithDownloadState(DownloadState state)
+    {
+        _downloadState = state;
+
+        switch (state)
+        {
+            case DownloadState.DownloadAvailable:
+                _downloadIconImage.gameObject.SetActive(true);
+                _filesizeText.gameObject.SetActive(true);
+                _altIconImage.gameObject.SetActive(false);
+                _loadingIcon.iconHolder.SetActive(false);
+                _loadingIcon.StopRecursiveAnimation(true);
+                _progressPie.gameObject.SetActive(false);
+                _fillImage.color = new Color(0.910f, 0.212f, 0.333f); // TODO: Use theme colors
+                break;
+
+            case DownloadState.DownloadUnavailable:
+                _downloadIconImage.gameObject.SetActive(false);
+                _filesizeText.gameObject.SetActive(false);
+                _altIconImage.gameObject.SetActive(true);
+                _loadingIcon.iconHolder.SetActive(false);
+                _loadingIcon.StopRecursiveAnimation(true);
+                _progressPie.gameObject.SetActive(false);
+                _fillImage.color = new Color(0.102f, 0.102f, 0.102f); // TODO: Use theme colors
+
+                _altIconImage.sprite = AssetManager.GetSprite("PageBroken64.png");
+                break;
+
+            case DownloadState.Downloading downloading:
+                _downloadIconImage.gameObject.SetActive(false);
+                _filesizeText.gameObject.SetActive(false);
+                _altIconImage.gameObject.SetActive(false);
+                _loadingIcon.iconHolder.SetActive(false);
+                _loadingIcon.StopRecursiveAnimation(true);
+                _progressPie.gameObject.SetActive(true);
+                _fillImage.color = new Color(0.102f, 0.102f, 0.102f); // TODO: Use theme colors
+
+                _progressPie.FillPercent = downloading.Percent;
+                break;
+
+            case DownloadState.Owned:
+                _downloadIconImage.gameObject.SetActive(false);
+                _filesizeText.gameObject.SetActive(false);
+                _altIconImage.gameObject.SetActive(true);
+                _loadingIcon.iconHolder.SetActive(false);
+                _loadingIcon.StopRecursiveAnimation(true);
+                _progressPie.gameObject.SetActive(false);
+                _fillImage.color = new Color(0.102f, 0.102f, 0.102f); // TODO: Use theme colors
+
+                _altIconImage.sprite = AssetManager.GetSprite("PageTick64.png");
+                break;
+
+            case DownloadState.Waiting:
+                _downloadIconImage.gameObject.SetActive(false);
+                _filesizeText.gameObject.SetActive(false);
+                _altIconImage.gameObject.SetActive(false);
+                _loadingIcon.iconHolder.SetActive(true);
+                _loadingIcon.StartRecursiveAnimation();
+                _progressPie.gameObject.SetActive(false);
+                _fillImage.color = new Color(0.102f, 0.102f, 0.102f); // TODO: Use theme colors
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(state));
+        }
+
+        return this;
+    }
+
+    internal void OnDownload(Action callback)
+    {
+        _button.onClick.AddListener(() =>
+        {
+            if (_downloadState is DownloadState.DownloadAvailable)
+            {
+                callback();
+            }
+        });
     }
 }

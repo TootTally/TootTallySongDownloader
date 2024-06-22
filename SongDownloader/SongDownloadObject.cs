@@ -4,9 +4,7 @@ using BaboonAPI.Hooks.Tracks;
 using BepInEx;
 using Microsoft.FSharp.Core;
 using System.IO;
-using TMPro;
 using TootTallyCore.APIServices;
-using TootTallyCore.Graphics;
 using TootTallyCore.Utils.Helpers;
 using TootTallyCore.Utils.TootTallyNotifs;
 using TootTallySettings;
@@ -18,12 +16,8 @@ namespace TootTallySongDownloader
 {
     internal class SongDownloadObject : BaseTootTallySettingObject
     {
-        private SongRow? _songRow;
-        private SongDataFromDB? _song;
-        private GameObject? _downloadButton;
-        private ProgressBar? _progressBar;
-        private TMP_Text? _fileSizeText;
-        private TMP_Text? _durationText;
+        private readonly SongRow _songRow;
+        private readonly SongDataFromDB _song;
         public bool isDownloadAvailable, isOwned;
         private Coroutine? _fileSizeCoroutine;
 
@@ -36,39 +30,26 @@ namespace TootTallySongDownloader
                 .WithSongName(song.name)
                 .WithArtist(song.author)
                 .WithDurationSeconds(song.song_length)
-                .WithDifficulty(song.difficulty);
-
-            // TODO ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-            // var charterText = GameObjectFactory.CreateSingleText(mainBodyTf, "Charter", song.charter != null ? $"Mapped by {song.charter}" : "Unknown");
-            // _durationText = GameObjectFactory.CreateSingleText(mainBodyTf, "Duration", stringTime);
-            // _fileSizeText = GameObjectFactory.CreateSingleText(mainBodyTf, "FileSize", "");
-            // _fileSizeText.GetComponent<RectTransform>().sizeDelta = new Vector2(100, 128);
-            // _fileSizeText.gameObject.SetActive(false);
-
-            //fuck that shit :skull:
-            // songNameText.GetComponent<RectTransform>().sizeDelta = charterText.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 128);
-            // _durationText.GetComponent<RectTransform>().sizeDelta = new Vector2(230, 128);
-            // songNameText.overflowMode = charterText.overflowMode = _durationText.overflowMode = TextOverflowModes.Ellipsis;
-
-            // TODO TEMP
-            // charterText.gameObject.SetActive(false);
-            // _durationText.gameObject.SetActive(false);
+                .WithDifficulty(song.difficulty)
+                .WithCharter(song.charter)
+                .OnDownload(DownloadChart);
 
             //lol
-            if (FSharpOption<TromboneTrack>.get_IsNone(TrackLookup.tryLookup(song.track_ref)) && !(_page as SongDownloadPage).IsAlreadyDownloaded(song.track_ref))
+            if (FSharpOption<TromboneTrack>.get_IsNone(TrackLookup.tryLookup(song.track_ref)) && !((SongDownloadPage)_page).IsAlreadyDownloaded(song.track_ref))
             {
-                string? link = FileHelper.GetDownloadLinkFromSongData(song);
-
+                // User does not have the chart downloaded, query some info from the TootTally API
+                var link = FileHelper.GetDownloadLinkFromSongData(song);
                 if (link != null)
                 {
+                    _songRow.WithDownloadState(new DownloadState.Waiting());
                     _fileSizeCoroutine = Plugin.Instance.StartCoroutine(TootTallyAPIService.GetFileSize(link, fileData =>
                     {
                         if (fileData != null)
                         {
-                            DisplaySizeFileText(fileData.size);
                             if (!fileData.extension.Contains("zip"))
-                                DisplayNotAvailableText($"File is not zip: {fileData.extension}.", 4);
+                            {
+                                DisplaySongNotAvailable($"File is not zip: {fileData.extension}.");
+                            }
                             else
                             {
                                 _fileSizeCoroutine = null;
@@ -78,104 +59,92 @@ namespace TootTallySongDownloader
                                 // _downloadButton.transform.SetSiblingIndex(4);
                                 // _progressBar = GameObjectFactory.CreateProgressBar(_songRow.transform.Find("LatencyFG"), Vector2.zero, new Vector2(900, 20), false, "ProgressBar");
                                 // ((SongDownloadPage)_page).UpdateDownloadAllButton();
+
+                                _songRow
+                                    .WithFileSize(fileData.size)
+                                    .WithDownloadState(new DownloadState.DownloadAvailable());
                             }
                         }
                         else
                         {
-                            DisplayNotAvailableText($"Couldn't access file at {link}", 3);
+                            DisplaySongNotAvailable($"Couldn't access file at {link}");
                         }
-                        
                     }));
                 }
                 else
-                    DisplayNotAvailableText("No download link found.");
+                {
+                    // TODO
+                    DisplaySongNotAvailable("No download link found.");
+                }
             }
             else
-                DisplayOwnedText();
+            {
+                // User already has the song
+                _songRow.WithDownloadState(new DownloadState.Owned());
+            }
 
             //GameObjectFactory.CreateCustomButton(_songRow.transform, Vector2.zero, new Vector2(64, 64), AssetManager.GetSprite("global64.png"), "OpenWebButton", () => Application.OpenURL($"https://toottally.com/song/{song.id}/"));
         }
 
-        public void DisplaySizeFileText(long size)
-        {
-            // var stringSize = FileHelper.SizeSuffix(size, 2);
-            // _fileSizeText.text = stringSize;
-            // _fileSizeText.gameObject.SetActive(true);
-            // _durationText.GetComponent<RectTransform>().sizeDelta = new Vector2(100, 128);
-
-            // TODO
-        }
-
-        public void DisplayNotAvailableText(string error, int siblingIndex = -1)
+        public void DisplaySongNotAvailable(string error)
         {
             Plugin.LogWarning($"{_song.track_ref} cannot be downloaded: {error}");
-            var notAvailableText = GameObjectFactory.CreateSingleText(_songRow!.GameObject.transform, "N/A", "N/A");
-            notAvailableText.GetComponent<RectTransform>().sizeDelta = new Vector2(64, 128);
-            notAvailableText.overflowMode = TextOverflowModes.Overflow;
-            notAvailableText.enableWordWrapping = false;
-            if (siblingIndex != -1)
-                notAvailableText.transform.SetSiblingIndex(siblingIndex);
+            _songRow.WithDownloadState(new DownloadState.DownloadUnavailable());
         }
 
-        public void DisplayOwnedText()
-        {
-            isOwned = true;
-            var ownedText = GameObjectFactory.CreateSingleText(_songRow!.GameObject.transform, "Owned", "Owned");
-            ownedText.GetComponent<RectTransform>().sizeDelta = new Vector2(64, 128);
-            ownedText.overflowMode = TMPro.TextOverflowModes.Overflow;
-            ownedText.enableWordWrapping = false;
-        }
-
-        public void SetActive(bool active) => _songRow!.GameObject.SetActive(active);
+        public void SetActive(bool active) => _songRow.GameObject.SetActive(active);
 
         public override void Dispose()
         {
-            Object.DestroyImmediate(_songRow!.GameObject);
+            _songRow.Dispose();
             if (_fileSizeCoroutine != null)
                 Plugin.Instance.StopCoroutine(_fileSizeCoroutine);
         }
 
         public void DownloadChart()
         {
-            isDownloadAvailable = false;
-            _downloadButton.SetActive(false);
-            _fileSizeText.gameObject.SetActive(false);
-            string link = _song.mirror ?? _song.download;
-            Plugin.Instance.StartCoroutine(TootTallyAPIService.DownloadZipFromServer(link, _progressBar, data =>
-            {
-                if (data != null)
+            // isDownloadAvailable = false;
+
+            _songRow.WithDownloadState(new DownloadState.Downloading { Percent = 0f });
+
+            var link = _song.mirror ?? _song.download;
+            Plugin.Instance.StartCoroutine(TootTallyAPIService.DownloadZipFromServer(
+                link,
+                webRequest =>
                 {
-                    string downloadDir = Path.Combine(Path.GetDirectoryName(Plugin.Instance.Info.Location)!, "Downloads/");
-                    string fileName = $"{_song.id}.zip";
-                    if (!Directory.Exists(downloadDir))
-                        Directory.CreateDirectory(downloadDir);
-                    FileHelper.WriteBytesToFile(downloadDir, fileName, data);
-
-                    string source = Path.Combine(downloadDir, fileName);
-                    string destination = Path.Combine(Paths.BepInExRootPath, "CustomSongs/");
-                    FileHelper.ExtractZipToDirectory(source, destination);
-
-                    FileHelper.DeleteFile(downloadDir, fileName);
-
-                    var t4 = GameObjectFactory.CreateSingleText(_songRow!.GameObject.transform, "Owned", "Owned");
-                    isOwned = true;
-                    t4.GetComponent<RectTransform>().sizeDelta = new Vector2(64, 128);
-                    t4.overflowMode = TMPro.TextOverflowModes.Overflow;
-                    t4.enableWordWrapping = false;
-                    t4.transform.SetSiblingIndex(3);
-                    _durationText.GetComponent<RectTransform>().sizeDelta = new Vector2(230, 128);
-                    var page = _page as SongDownloadPage;
-                    page.AddTrackRefToDownloadedSong(_song.track_ref);
-                    SetActive(!page.ShowNotOwnedOnly);
-                }
-                else
+                    _songRow.WithDownloadState(new DownloadState.Downloading { Percent = webRequest.downloadProgress });
+                },
+                data =>
                 {
-                    TootTallyNotifManager.DisplayNotif("Download failed.");
-                    _downloadButton.SetActive(true);
-                }
+                    if (data != null)
+                    {
+                        var downloadDir = Path.Combine(Path.GetDirectoryName(Plugin.Instance.Info.Location)!, "Downloads/");
+                        var fileName = $"{_song.id}.zip";
+                        if (!Directory.Exists(downloadDir))
+                            Directory.CreateDirectory(downloadDir);
+                        FileHelper.WriteBytesToFile(downloadDir, fileName, data);
 
-            }));
+                        var source = Path.Combine(downloadDir, fileName);
+                        var destination = Path.Combine(Paths.BepInExRootPath, "CustomSongs/");
+                        FileHelper.ExtractZipToDirectory(source, destination);
+
+                        FileHelper.DeleteFile(downloadDir, fileName);
+
+                        isOwned = true;
+
+                        _songRow.WithDownloadState(new DownloadState.Owned());
+
+                        var page = (SongDownloadPage)_page;
+                        page.AddTrackRefToDownloadedSong(_song.track_ref);
+                        SetActive(!page.ShowNotOwnedOnly);
+                    }
+                    else
+                    {
+                        TootTallyNotifManager.DisplayNotif("Download failed.");
+                        _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
+                    }
+                }
+            ));
         }
-
     }
 }

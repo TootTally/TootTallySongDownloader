@@ -1,6 +1,8 @@
 #nullable enable
 
+using System;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace TootTallySongDownloader.Ui;
@@ -9,20 +11,22 @@ namespace TootTallySongDownloader.Ui;
 /// A song row is composed of three parts next to each other
 /// <c>[Main body                        ][More info][Download]</c>
 /// </summary>
-public class SongRow
+public class SongRow : IDisposable
 {
     internal readonly GameObject GameObject;
     private RectTransform Transform => (RectTransform)GameObject.transform;
 
     private readonly MainBody _mainBody;
+    private readonly DownloadButton _downloadButton;
 
     /// <summary>
     /// Private ctor, use <c>Create</c> instead
     /// </summary>
-    private SongRow(GameObject gameObject, MainBody mainBody)
+    private SongRow(GameObject gameObject, MainBody mainBody, DownloadButton downloadButton)
     {
         GameObject = gameObject;
         _mainBody = mainBody;
+        _downloadButton = downloadButton;
     }
 
     internal static SongRow Create()
@@ -46,9 +50,9 @@ public class SongRow
         // Create each part of the row /////////////////////////////////////////////////////////////////////////////////
         var mainBody = MainBody.Create().WithParent(songRowTf);
         MoreInfoButton.Create().WithParent(songRowTf);
-        DownloadButton.Create().WithParent(songRowTf);
+        var downloadButton = DownloadButton.Create().WithParent(songRowTf);
 
-        return new SongRow(rowGo, mainBody);
+        return new SongRow(rowGo, mainBody, downloadButton);
     }
 
     internal SongRow WithParent(Transform parent)
@@ -79,5 +83,34 @@ public class SongRow
     {
         _mainBody.WithDifficulty(difficulty);
         return this;
+    }
+
+    internal SongRow WithCharter(string charterDisplayName)
+    {
+        _mainBody.WithCharter(charterDisplayName);
+        return this;
+    }
+
+    internal SongRow WithDownloadState(DownloadState state)
+    {
+        _downloadButton.WithDownloadState(state);
+        return this;
+    }
+
+    internal SongRow WithFileSize(long fileDataSize)
+    {
+        _downloadButton.WithFilesize(fileDataSize);
+        return this;
+    }
+
+    internal SongRow OnDownload(Action callback)
+    {
+        _downloadButton.OnDownload(callback);
+        return this;
+    }
+
+    public void Dispose()
+    {
+        UnityEngine.Object.DestroyImmediate(GameObject);
     }
 }

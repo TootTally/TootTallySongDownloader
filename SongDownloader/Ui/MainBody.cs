@@ -18,6 +18,7 @@ public class MainBody
     private readonly TMP_Text _artistText;
     private readonly StatDisplay _durationStatDisplay;
     private readonly StatDisplay _difficultyStatDisplay;
+    private readonly StatDisplay _charterStatDisplay;
 
     /// <summary>
     /// Private ctor, use <c>Create</c> instead
@@ -27,7 +28,8 @@ public class MainBody
         TMP_Text songNameText,
         TMP_Text artistText,
         StatDisplay durationStatDisplay,
-        StatDisplay difficultyStatDisplay
+        StatDisplay difficultyStatDisplay,
+        StatDisplay charterStatDisplay
     )
     {
         _gameObject = gameObject;
@@ -35,6 +37,7 @@ public class MainBody
         _artistText = artistText;
         _durationStatDisplay = durationStatDisplay;
         _difficultyStatDisplay = difficultyStatDisplay;
+        _charterStatDisplay = charterStatDisplay;
     }
 
     internal static MainBody Create()
@@ -120,9 +123,9 @@ public class MainBody
         songNameTf.anchorMin = new Vector2(0f, 1f);
         songNameTf.anchorMax = new Vector2(1f, 1f);
         songNameTf.offsetMin = new Vector2(8f, -28f - 8f);
-        songNameTf.offsetMax = new Vector2(-200f - 8f, -8f);
+        songNameTf.offsetMax = new Vector2(-200f - 8f, 0f);
         songNameText.fontSize = 24f;
-        songNameText.alignment = TextAlignmentOptions.TopLeft;
+        songNameText.alignment = TextAlignmentOptions.BottomLeft;
         songNameText.overflowMode = TextOverflowModes.Ellipsis;
         songNameText.enableWordWrapping = false;
 
@@ -149,26 +152,53 @@ public class MainBody
         rightTopBoxTf.SetParent(mainBodyTf, false);
         rightTopBoxTf.anchorMin = new Vector2(1f, 0f);
         rightTopBoxTf.anchorMax = new Vector2(1f, 1f);
-        rightTopBoxTf.offsetMin = new Vector2(-200 -8f, -28f - 8f);
+        rightTopBoxTf.offsetMin = new Vector2(-200 -8f, 8f);
         rightTopBoxTf.offsetMax = new Vector2(-8f, -8f);
 
         var rightTopBoxLayout = rightTopBox.GetComponent<HorizontalLayoutGroup>();
         rightTopBoxLayout.childControlWidth = true;
-        rightTopBoxLayout.childControlHeight = false;
+        rightTopBoxLayout.childControlHeight = true;
         rightTopBoxLayout.childForceExpandWidth = false;
-        rightTopBoxLayout.childForceExpandHeight = true;
+        rightTopBoxLayout.childForceExpandHeight = false;
         rightTopBoxLayout.childAlignment = TextAnchor.UpperRight;
         rightTopBoxLayout.spacing = 8f;
 
         var durationStatDisplay = StatDisplay.Create().WithParent(rightTopBoxTf).WithIcon("time64.png");
         var difficultyStatDisplay = StatDisplay.Create().WithParent(rightTopBoxTf).WithIcon("stardiff64.png");
 
+        // Add main body right bottom box //////////////////////////////////////////////////////////////////////////////
+        var rightBottomBox = new GameObject(
+            "RightBottomBox",
+            typeof(RectTransform),
+            typeof(HorizontalLayoutGroup)
+        );
+
+        var rightBottomBoxTf = (RectTransform)rightBottomBox.transform;
+        rightBottomBoxTf.SetParent(mainBodyTf, false);
+        rightBottomBoxTf.anchorMin = new Vector2(1f, 0f);
+        rightBottomBoxTf.anchorMax = new Vector2(1f, 1f);
+        rightBottomBoxTf.offsetMin = new Vector2(-200 -8f, 8f);
+        rightBottomBoxTf.offsetMax = new Vector2(-8f, -8f);
+
+        var rightBottomBoxLayout = rightBottomBox.GetComponent<HorizontalLayoutGroup>();
+        rightBottomBoxLayout.childControlWidth = true;
+        rightBottomBoxLayout.childControlHeight = true;
+        rightBottomBoxLayout.childForceExpandWidth = false;
+        rightBottomBoxLayout.childForceExpandHeight = false;
+        rightBottomBoxLayout.childAlignment = TextAnchor.LowerRight;
+        rightBottomBoxLayout.spacing = 8f;
+
+        var charterStatDisplay = StatDisplay.Create().WithParent(rightBottomBoxTf).WithIcon("Pencil64.png");
+
+        // TODO: Add ranked icon somewhere
+
         return new MainBody(
             gameObject: bodyGo,
             songNameText: songNameText,
             artistText: artistText,
             durationStatDisplay: durationStatDisplay,
-            difficultyStatDisplay: difficultyStatDisplay
+            difficultyStatDisplay: difficultyStatDisplay,
+            charterStatDisplay: charterStatDisplay
         );
     }
 
@@ -201,6 +231,12 @@ public class MainBody
     internal MainBody WithDifficulty(float difficulty)
     {
         _difficultyStatDisplay.WithText(difficulty.ToString("n2"));
+        return this;
+    }
+
+    internal MainBody WithCharter(string charterDisplayName)
+    {
+        _charterStatDisplay.WithText(charterDisplayName);
         return this;
     }
 }

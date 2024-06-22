@@ -22,7 +22,6 @@ namespace TootTallySongDownloader
         private GameObject _downloadAllButton;
         private Toggle _toggleRated, _toggleUnrated, _toggleNotOwned;
         private LoadingIcon _loadingIcon;
-        // internal GameObject songRowPrefab;
         private List<string> _trackRefList;
         private List<string> _newDownloadedTrackRefs;
         private List<SongDownloadObject> _downloadObjectList;
@@ -180,42 +179,6 @@ namespace TootTallySongDownloader
         {
             _downloadObjectList.ForEach(x => x.SetActive(!(value && x.isOwned)));
         }
-
-        // public void SetSongRowPrefab()
-        // {
-        //     var tempRow = GameObjectFactory.CreateOverlayPanel(_fullPanel.transform, Vector2.zero, new Vector2(1030, 140), 5f, $"TwitchRequestRowTemp").transform.Find("FSLatencyPanel").gameObject;
-        //     songRowPrefab = GameObject.Instantiate(tempRow);
-        //     GameObject.DestroyImmediate(tempRow.gameObject);
-        //
-        //     songRowPrefab.name = "RequestRowPrefab";
-        //     songRowPrefab.transform.localScale = Vector3.one;
-        //     songRowPrefab.GetComponent<Image>().maskable = true;
-        //     songRowPrefab.GetComponent<RectTransform>().sizeDelta = new Vector2(1050, 160);
-        //
-        //     var container = songRowPrefab.transform.Find("LatencyFG/MainPage").gameObject;
-        //     container.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-        //     container.GetComponent<RectTransform>().sizeDelta = new Vector2(1050, 64);
-        //
-        //     GameObject.DestroyImmediate(container.transform.parent.Find("subtitle").gameObject);
-        //     GameObject.DestroyImmediate(container.transform.parent.Find("title").gameObject);
-        //     GameObject.DestroyImmediate(container.GetComponent<VerticalLayoutGroup>());
-        //
-        //     // var horizontalLayoutGroup = container.AddComponent<HorizontalLayoutGroup>();
-        //     // horizontalLayoutGroup.padding = new RectOffset(20, 20, 20, 20);
-        //     // horizontalLayoutGroup.spacing = 30f;
-        //     // horizontalLayoutGroup.childAlignment = TextAnchor.MiddleLeft;
-        //     // horizontalLayoutGroup.childControlHeight = horizontalLayoutGroup.childControlWidth = false;
-        //     // horizontalLayoutGroup.childForceExpandHeight = horizontalLayoutGroup.childForceExpandWidth = false;
-        //
-        //     container.AddComponent<Canvas>();
-        //
-        //     songRowPrefab.transform.Find("LatencyFG").GetComponent<Image>().maskable = true;
-        //     songRowPrefab.transform.Find("LatencyFG").GetComponent<Image>().color = new Color(.1f, .1f, .1f);
-        //     songRowPrefab.transform.Find("LatencyBG").GetComponent<Image>().maskable = true;
-        //
-        //     GameObject.DontDestroyOnLoad(songRowPrefab);
-        //     songRowPrefab.SetActive(false);
-        // }
 
         public void AddTrackRefToDownloadedSong(string trackref) => _newDownloadedTrackRefs.Add(trackref);
         public bool IsAlreadyDownloaded(string trackref) => _newDownloadedTrackRefs.Contains(trackref);
