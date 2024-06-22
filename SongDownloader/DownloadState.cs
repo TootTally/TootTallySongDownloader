@@ -1,3 +1,5 @@
+using TootTallyCore.Graphics.ProgressCounter;
+
 namespace TootTallySongDownloader;
 
 internal record DownloadState
@@ -22,7 +24,7 @@ internal record DownloadState
     /// </summary>
     internal record Downloading : DownloadState
     {
-        internal float Percent;
+        internal ProgressCounter Progress;
     }
 
     /// <summary>

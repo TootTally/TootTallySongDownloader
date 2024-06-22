@@ -5,6 +5,7 @@ using BepInEx;
 using Microsoft.FSharp.Core;
 using System.IO;
 using TootTallyCore.APIServices;
+using TootTallyCore.Graphics.ProgressCounter;
 using TootTallyCore.Utils.Helpers;
 using TootTallyCore.Utils.TootTallyNotifs;
 using TootTallySettings;
@@ -105,15 +106,13 @@ namespace TootTallySongDownloader
         {
             // isDownloadAvailable = false;
 
-            _songRow.WithDownloadState(new DownloadState.Downloading { Percent = 0f });
+            var progress = new ProgressCounter();
+            _songRow.WithDownloadState(new DownloadState.Downloading { Progress = progress });
 
             var link = _song.mirror ?? _song.download;
             Plugin.Instance.StartCoroutine(TootTallyAPIService.DownloadZipFromServer(
                 link,
-                webRequest =>
-                {
-                    _songRow.WithDownloadState(new DownloadState.Downloading { Percent = webRequest.downloadProgress });
-                },
+                progress,
                 data =>
                 {
                     if (data != null)
