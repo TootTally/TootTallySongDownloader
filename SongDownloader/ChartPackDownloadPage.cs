@@ -7,6 +7,7 @@ using TMPro;
 using TootTallyCore.APIServices;
 using TootTallyCore.Graphics;
 using TootTallyCore.Utils.Assets;
+using TootTallyCore.Utils.Helpers;
 using TootTallyCore.Utils.TootTallyNotifs;
 using TootTallySettings;
 using UnityEngine;
@@ -52,9 +53,19 @@ namespace TootTallySongDownloader.SongDownloader
             {
                 if (_newDownloadedTrackRefs.Count > 0)
                 {
-                    TootTallyNotifManager.DisplayNotif("New tracks detected, Reloading songs...\nLagging is normal.");
+                    TootTallyNotifManager.DisplayNotif("Reloading songs...");
                     _newDownloadedTrackRefs.Clear();
-                    TootTallyCore.Plugin.Instance.Invoke("ReloadTracks", 0.35f);
+                    TootTallyCore.Plugin.Instance.reloadManager.ReloadAll(new ProgressCallbacks
+                    {
+                        onComplete = () =>
+                        {
+                            TootTallyNotifManager.DisplayNotif("Reload complete!");
+                        },
+                        onError = (err) =>
+                        {
+                            TootTallyNotifManager.DisplayNotif($"Reloading failed! {err.Message}");
+                        }
+                    });
                 }
             });
         }
