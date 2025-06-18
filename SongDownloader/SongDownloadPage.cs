@@ -79,7 +79,7 @@ namespace TootTallySongDownloader
             {
                 if (_newDownloadedTrackRefs.Count > 0)
                 {
-                    TootTallyNotifManager.DisplayNotif("New tracks detected, Reloading songs...\nLagging is normal.");
+                    TootTallyNotifManager.DisplayNotif("Reloading songs...");
                     _newDownloadedTrackRefs.Clear();
                     TootTallyCore.Plugin.Instance.reloadManager.ReloadAll(new ProgressCallbacks
                     {
