@@ -103,7 +103,7 @@ public class DownloadButton
         fillImage.sprite = Sprite.Create(
             fillTexture,
             new Rect(0f, 0f, fillTexture.width, fillTexture.height),
-            new Vector2(0.5f, 0.5f),
+            Vector2.one * .5f,
             100f,
             1,
             SpriteMeshType.FullRect,
@@ -135,7 +135,7 @@ public class DownloadButton
         borderImage.sprite = Sprite.Create(
             borderTexture,
             new Rect(0f, 0f, borderTexture.width, borderTexture.height),
-            new Vector2(0.5f, 0.5f),
+            Vector2.one * .5f,
             100f,
             1,
             SpriteMeshType.FullRect,
@@ -157,12 +157,12 @@ public class DownloadButton
         var downloadIconImage = downloadIconGo.GetComponent<Image>();
         downloadIconImage.sprite = AssetManager.GetSprite("Download64.png");
 
+        var anchor = Vector2.one * .5f;
         // Center-ish the icon
         // (the icon is placed a bit above the center to make room for the filesize text)
         var downloadIconTf = (RectTransform)downloadIconGo.transform;
         downloadIconTf.SetParent(bodyTf, false);
-        downloadIconTf.anchorMin = new Vector2(0.5f, 0.5f);
-        downloadIconTf.anchorMax = new Vector2(0.5f, 0.5f);
+        downloadIconTf.anchorMin = downloadIconTf.anchorMax = anchor;
         downloadIconTf.offsetMin = new Vector2(-18f, -18f + 8f);
         downloadIconTf.offsetMax = new Vector2(18f, 18f + 8f);
 
@@ -171,9 +171,9 @@ public class DownloadButton
         filesizeText.gameObject.SetActive(false);
 
         var filesizeTf = filesizeText.rectTransform!;
-        filesizeTf.anchorMin = new Vector2(0f, 0f);
+        filesizeTf.anchorMin = Vector2.zero;
         filesizeTf.anchorMax = new Vector2(1f, 0f);
-        filesizeTf.offsetMin = new Vector2(4f, 4f);
+        filesizeTf.offsetMin = Vector2.one * 4f;
         filesizeTf.offsetMax = new Vector2(-4f, 24f);
 
         filesizeText.fontSize = 14f;
@@ -190,28 +190,28 @@ public class DownloadButton
         );
         altIconGo.SetActive(false);
 
+        var offset = Vector2.one * 24f;
+
         // Center the icon
         var altIconTf = (RectTransform)altIconGo.transform;
         altIconTf.SetParent(bodyTf, false);
-        altIconTf.anchorMin = new Vector2(0.5f, 0.5f);
-        altIconTf.anchorMax = new Vector2(0.5f, 0.5f);
-        altIconTf.offsetMin = new Vector2(-24f, -24f);
-        altIconTf.offsetMax = new Vector2(24f, 24f);
+        altIconTf.anchorMin = altIconTf.anchorMax = anchor;
+        altIconTf.offsetMin = -offset;
+        altIconTf.offsetMax = offset;
 
         // Create loading icon /////////////////////////////////////////////////////////////////////////////////////////
         var loadingIcon = GameObjectFactory.CreateLoadingIcon(
             bodyTf,
             Vector2.zero,
-            new Vector2(48f, 48f),
+            Vector2.one * 48f,
             AssetManager.GetSprite("IconMono.png"),
             true,
             "LoadingIcon"
         );
         var loadingIconTf = (RectTransform)loadingIcon.iconHolder.transform;
-        loadingIconTf.anchorMin = new Vector2(0.5f, 0.5f);
-        loadingIconTf.anchorMax = new Vector2(0.5f, 0.5f);
-        loadingIconTf.offsetMin = new Vector2(-24f, -24f);
-        loadingIconTf.offsetMax = new Vector2(24f, 24f);
+        loadingIconTf.anchorMin = loadingIconTf.anchorMax = anchor;
+        loadingIconTf.offsetMin = -offset;
+        loadingIconTf.offsetMax = offset;
 
         // Create progress pie /////////////////////////////////////////////////////////////////////////////////////////
         // Used when the chart is downloading
@@ -226,20 +226,19 @@ public class DownloadButton
         // Center the pie
         var progressPieTf = (RectTransform)progressPieGo.transform;
         progressPieTf.SetParent(bodyTf, false);
-        progressPieTf.anchorMin = new Vector2(0.5f, 0.5f);
-        progressPieTf.anchorMax = new Vector2(0.5f, 0.5f);
-        progressPieTf.offsetMin = new Vector2(-24f, -24f);
-        progressPieTf.offsetMax = new Vector2(24f, 24f);
+        progressPieTf.anchorMin = progressPieTf.anchorMax = anchor;
+        progressPieTf.offsetMin = -offset;
+        progressPieTf.offsetMax = offset;
 
         return new DownloadButton(
-            gameObject: bodyGo,
-            button: button,
-            fillImage: fillImage,
-            downloadIconImage: downloadIconImage,
-            filesizeText: filesizeText,
-            altIconImage: altIconGo.GetComponent<Image>(),
-            loadingIcon: loadingIcon,
-            progressPie: progressPieGo.GetComponent<ProgressPieGraphic>()
+            bodyGo,
+            button,
+            fillImage,
+            downloadIconImage,
+            filesizeText,
+            altIconGo.GetComponent<Image>(),
+            loadingIcon,
+            progressPieGo.GetComponent<ProgressPieGraphic>()
         );
     }
 
