@@ -1,3 +1,4 @@
+using TootTallyCore.Graphics.ProgressCounter;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,7 +10,7 @@ namespace TootTallySongDownloader.Ui;
 /// <remarks>
 /// At some point this might be moved out of song downloader if other TootTally modules want it
 /// </remarks>
-public class ProgressPieGraphic : MaskableGraphic
+public class ProgressPieGraphic : MaskableGraphic, IProgressCountable
 {
     internal float FillPercent {
         get => _fillPercent;
@@ -63,5 +64,15 @@ public class ProgressPieGraphic : MaskableGraphic
             vh.AddVert(vert2);
             vh.AddTriangle(0, vert1Index, vert2Index);
         }
+    }
+
+    public void OnProgressCounterFinish(double elapsed)
+    {
+        _fillPercent = 100;
+    }
+
+    public void OnProgressCounterUpdate(float progress)
+    {
+        _fillPercent = progress;
     }
 }

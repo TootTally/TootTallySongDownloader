@@ -292,10 +292,10 @@ public class DownloadButton
                 _progressPie.gameObject.SetActive(true);
                 _fillImage.color = new Color(0.102f, 0.102f, 0.102f); // TODO: Use theme colors
 
-                downloading.Progress.OnProgressCounterUpdate += (counter, percent) =>
+                /*downloading.Progress.OnProgressCounterUpdate += (counter, percent) =>
                 {
                     _progressPie.FillPercent = percent;
-                };
+                };*/
                 break;
 
             case DownloadState.Owned:
