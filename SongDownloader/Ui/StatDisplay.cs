@@ -82,7 +82,7 @@ public class StatDisplay
     internal StatDisplay WithIcon(string assetKey)
     {
         _image.sprite = AssetManager.GetSprite(assetKey);
-        ((RectTransform)_image.transform).sizeDelta = new Vector2(20f, 20f); // TODO: Not here?
+        ((RectTransform)_image.transform).sizeDelta = Vector2.one * 20f; // TODO: Not here?
         return this;
     }
 

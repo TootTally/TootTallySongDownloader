@@ -1,4 +1,4 @@
-using TootTallyCore.Graphics.ProgressCounter;
+using TootTallyCore.Graphics.ProgressCounters;
 
 namespace TootTallySongDownloader;
 

@@ -72,11 +72,11 @@ public class MoreInfoButton
         fillImage.sprite = Sprite.Create(
             fillTexture,
             new Rect(0f, 0f, fillTexture.width, fillTexture.height),
-            new Vector2(0.5f, 0.5f),
+            Vector2.one * .5f,
             100f,
             1,
             SpriteMeshType.FullRect,
-            new Vector4(4f, 4f, 4f, 4f),
+            Vector4.one * 4f,
             false
         );
         fillImage.type = Image.Type.Sliced;
@@ -104,11 +104,11 @@ public class MoreInfoButton
         borderImage.sprite = Sprite.Create(
             borderTexture,
             new Rect(0f, 0f, borderTexture.width, borderTexture.height),
-            new Vector2(0.5f, 0.5f),
+            Vector2.one * .5f,
             100f,
             1,
             SpriteMeshType.FullRect,
-            new Vector4(4f, 4f, 4f, 4f),
+            Vector4.one * 4f,
             false
         );
         borderImage.type = Image.Type.Sliced;
@@ -124,8 +124,8 @@ public class MoreInfoButton
         // Center the icon
         var iconTf = (RectTransform)iconGo.transform;
         iconTf.SetParent(bodyTf, false);
-        iconTf.anchorMin = new Vector2(0.5f, 0.5f);
-        iconTf.anchorMax = new Vector2(0.5f, 0.5f);
+        iconTf.anchorMin = Vector2.one * 0.5f;
+        iconTf.anchorMax = Vector2.one * 0.5f;
         iconTf.offsetMin = new Vector2(-3f, -11.5f);
         iconTf.offsetMax = new Vector2(3f, 11.5f);
 

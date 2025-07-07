@@ -1,4 +1,4 @@
-using TootTallyCore.Graphics.ProgressCounter;
+using TootTallyCore.Graphics.ProgressCounters;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -66,13 +66,14 @@ public class ProgressPieGraphic : MaskableGraphic, IProgressCountable
         }
     }
 
-    public void OnProgressCounterFinish(double elapsed)
+    public void OnProgressCounterFinish(ProgressCounter sender, double elapsed)
     {
-        _fillPercent = 100;
+        FillPercent = 100;
+        sender.RemoveCounter(this);
     }
 
-    public void OnProgressCounterUpdate(float progress)
+    public void OnProgressCounterUpdate(ProgressCounter sender, float progress)
     {
-        _fillPercent = progress;
+        FillPercent = progress;
     }
 }

@@ -77,11 +77,11 @@ public class MainBody
         panelFillImage.sprite = Sprite.Create(
             fillLeftTexture,
             new Rect(0f, 0f, fillLeftTexture.width, fillLeftTexture.height),
-            new Vector2(0.5f, 0.5f),
+            Vector2.one * .5f,
             100f,
             1,
             SpriteMeshType.FullRect,
-            new Vector4(4f, 4f, 4f, 4f),
+            Vector4.one * 4f,
             false
         );
         panelFillImage.type = Image.Type.Sliced;
@@ -107,11 +107,11 @@ public class MainBody
         panelBorderImage.sprite = Sprite.Create(
             borderLeftTexture,
             new Rect(0f, 0f, borderLeftTexture.width, borderLeftTexture.height),
-            new Vector2(0.5f, 0.5f),
+            Vector2.one * .5f,
             100f,
             1,
             SpriteMeshType.FullRect,
-            new Vector4(4f, 4f, 4f, 4f),
+            Vector4.one * 4f,
             false
         );
         panelBorderImage.type = Image.Type.Sliced;
@@ -121,7 +121,7 @@ public class MainBody
         var songNameText = GameObjectFactory.CreateSingleText(mainBodyTf, "SongName", "");
         var songNameTf = songNameText.rectTransform!;
         songNameTf.anchorMin = new Vector2(0f, 1f);
-        songNameTf.anchorMax = new Vector2(1f, 1f);
+        songNameTf.anchorMax = Vector2.one;
         songNameTf.offsetMin = new Vector2(8f, -28f - 8f);
         songNameTf.offsetMax = new Vector2(-200f - 8f, 0f);
         songNameText.fontSize = 24f;
@@ -131,9 +131,9 @@ public class MainBody
 
         var artistText = GameObjectFactory.CreateSingleText(mainBodyTf, "Artist", "");
         var artistTf = artistText.rectTransform!;
-        artistTf.anchorMin = new Vector2(0f, 0f);
+        artistTf.anchorMin = Vector2.zero;
         artistTf.anchorMax = new Vector2(1f, 0f);
-        artistTf.offsetMin = new Vector2(8f, 8f);
+        artistTf.offsetMin = Vector2.one * 8f;
         artistTf.offsetMax = new Vector2(-200f - 8f, 50f + 8f);
         artistText.fontSize = 18f;
         artistText.alignment = TextAlignmentOptions.BottomLeft;
@@ -151,9 +151,9 @@ public class MainBody
         var rightTopBoxTf = (RectTransform)rightTopBox.transform;
         rightTopBoxTf.SetParent(mainBodyTf, false);
         rightTopBoxTf.anchorMin = new Vector2(1f, 0f);
-        rightTopBoxTf.anchorMax = new Vector2(1f, 1f);
+        rightTopBoxTf.anchorMax = Vector2.one;
         rightTopBoxTf.offsetMin = new Vector2(-200 -8f, 8f);
-        rightTopBoxTf.offsetMax = new Vector2(-8f, -8f);
+        rightTopBoxTf.offsetMax = Vector2.one * -8f;
 
         var rightTopBoxLayout = rightTopBox.GetComponent<HorizontalLayoutGroup>();
         rightTopBoxLayout.childControlWidth = true;
@@ -176,9 +176,9 @@ public class MainBody
         var rightBottomBoxTf = (RectTransform)rightBottomBox.transform;
         rightBottomBoxTf.SetParent(mainBodyTf, false);
         rightBottomBoxTf.anchorMin = new Vector2(1f, 0f);
-        rightBottomBoxTf.anchorMax = new Vector2(1f, 1f);
+        rightBottomBoxTf.anchorMax = Vector2.one;
         rightBottomBoxTf.offsetMin = new Vector2(-200 -8f, 8f);
-        rightBottomBoxTf.offsetMax = new Vector2(-8f, -8f);
+        rightBottomBoxTf.offsetMax = Vector2.one * -8f;
 
         var rightBottomBoxLayout = rightBottomBox.GetComponent<HorizontalLayoutGroup>();
         rightBottomBoxLayout.childControlWidth = true;

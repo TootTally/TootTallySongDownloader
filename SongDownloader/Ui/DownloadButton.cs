@@ -282,19 +282,15 @@ public class DownloadButton
                 _altIconImage.sprite = AssetManager.GetSprite("PageBroken64.png");
                 break;
 
-            case DownloadState.Downloading downloading:
+            case DownloadState.Downloading counter:
                 _downloadIconImage.gameObject.SetActive(false);
                 _filesizeText.gameObject.SetActive(false);
                 _altIconImage.gameObject.SetActive(false);
                 _loadingIcon.iconHolder.SetActive(false);
                 _loadingIcon.StopRecursiveAnimation(true);
                 _progressPie.gameObject.SetActive(true);
+                counter.Progress.AddCounter(_progressPie);
                 _fillImage.color = new Color(0.102f, 0.102f, 0.102f); // TODO: Use theme colors
-
-                /*downloading.Progress.OnProgressCounterUpdate += (counter, percent) =>
-                {
-                    _progressPie.FillPercent = percent;
-                };*/
                 break;
 
             case DownloadState.Owned:
