@@ -22,7 +22,6 @@ namespace TootTallySongDownloader
         private GameObject _downloadAllButton;
         private Toggle _toggleRated, _toggleUnrated, _toggleNotOwned;
         private LoadingIcon _loadingIcon;
-        internal GameObject songRowPrefab;
         private List<string> _trackRefList;
         private List<string> _newDownloadedTrackRefs;
         private List<SongDownloadObject> _downloadObjectList;
@@ -73,7 +72,7 @@ namespace TootTallySongDownloader
             _downloadAllButton = GameObjectFactory.CreateCustomButton(_fullPanel.transform, new Vector2(-1330, -87), new Vector2(200, 60), "Download All", "DownloadAllButton", DownloadAll).gameObject;
             _downloadAllButton.SetActive(false);
 
-            SetSongRowPrefab();
+            // SetSongRowPrefab();
             _backButton.button.onClick.AddListener(() =>
             {
                 if (_newDownloadedTrackRefs.Count > 0)
@@ -84,6 +83,9 @@ namespace TootTallySongDownloader
                 }
             });
             _scrollableSliderHandler.accelerationMult = 0.09f;
+
+            // TODO: Do we want to rely on this?
+            gridPanel.GetComponent<VerticalLayoutGroup>()!.spacing = 8f;
         }
 
         public override void OnShow()
@@ -125,11 +127,20 @@ namespace TootTallySongDownloader
 
         }
 
-        private void OnSearchInfoRecieved(SongInfoFromDB searchInfo)
+#nullable enable
+
+        private void OnSearchInfoRecieved(SongInfoFromDB? searchInfo)
         {
             _searchButton.SetActive(true);
             _loadingIcon.Hide();
             _verticalSlider.value = 0;
+
+            if (searchInfo == null)
+            {
+                // TODO: More gracefully handle this (show a message to the user)
+                return;
+            }
+
             searchInfo.results.OrderByDescending(x => x.id).ToList()?.ForEach(AddSongToPage);
 
             _verticalSlider.gameObject.SetActive(searchInfo.results.Length > 5);
@@ -139,6 +150,8 @@ namespace TootTallySongDownloader
             if (searchInfo.previous != null)
                 _prevButton = GameObjectFactory.CreateCustomButton(_fullPanel.transform, new Vector2(-700, -175), new Vector2(50, 50), "<<", $"{name}PrevButton", () => Search(searchInfo.previous, false)).gameObject;
         }
+
+#nullable disable
 
         public void UpdateDownloadAllButton()
         {
@@ -165,38 +178,6 @@ namespace TootTallySongDownloader
         private void OnNotOwnedToggle(bool value)
         {
             _downloadObjectList.ForEach(x => x.SetActive(!(value && x.isOwned)));
-        }
-
-        public void SetSongRowPrefab()
-        {
-            var tempRow = GameObjectFactory.CreateOverlayPanel(_fullPanel.transform, Vector2.zero, new Vector2(1030, 140), 5f, $"TwitchRequestRowTemp").transform.Find("FSLatencyPanel").gameObject;
-            songRowPrefab = GameObject.Instantiate(tempRow);
-            GameObject.DestroyImmediate(tempRow.gameObject);
-
-            songRowPrefab.name = "RequestRowPrefab";
-            songRowPrefab.transform.localScale = Vector3.one;
-            songRowPrefab.GetComponent<Image>().maskable = true;
-            songRowPrefab.GetComponent<RectTransform>().sizeDelta = new Vector2(1050, 160);
-
-            var container = songRowPrefab.transform.Find("LatencyFG/MainPage").gameObject;
-            container.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-            container.GetComponent<RectTransform>().sizeDelta = new Vector2(1050, 160);
-
-            GameObject.DestroyImmediate(container.transform.parent.Find("subtitle").gameObject);
-            GameObject.DestroyImmediate(container.transform.parent.Find("title").gameObject);
-            GameObject.DestroyImmediate(container.GetComponent<VerticalLayoutGroup>());
-            var horizontalLayoutGroup = container.AddComponent<HorizontalLayoutGroup>();
-            horizontalLayoutGroup.padding = new RectOffset(20, 20, 20, 20);
-            horizontalLayoutGroup.spacing = 30f;
-            horizontalLayoutGroup.childAlignment = TextAnchor.MiddleLeft;
-            horizontalLayoutGroup.childControlHeight = horizontalLayoutGroup.childControlWidth = false;
-            horizontalLayoutGroup.childForceExpandHeight = horizontalLayoutGroup.childForceExpandWidth = false;
-            songRowPrefab.transform.Find("LatencyFG").GetComponent<Image>().maskable = true;
-            songRowPrefab.transform.Find("LatencyFG").GetComponent<Image>().color = new Color(.1f, .1f, .1f);
-            songRowPrefab.transform.Find("LatencyBG").GetComponent<Image>().maskable = true;
-
-            GameObject.DontDestroyOnLoad(songRowPrefab);
-            songRowPrefab.SetActive(false);
         }
 
         public void AddTrackRefToDownloadedSong(string trackref) => _newDownloadedTrackRefs.Add(trackref);

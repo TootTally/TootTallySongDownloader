@@ -73,8 +73,8 @@ namespace TootTallySongDownloader.SongDownloader
         {
             if (input == DEFAULT_INPUT_TEXT)
                 input = "";
-            _downloadObjectList.Clear();
-            _downloadAllButton.SetActive(false);
+            // _downloadObjectList.Clear();
+            // _downloadAllButton.SetActive(false);
             RemoveAllObjects();
             _searchButton.SetActive(false);
             _loadingIcon.Show();
@@ -89,11 +89,11 @@ namespace TootTallySongDownloader.SongDownloader
                 _prevButton = null;
             }
 
-            _trackRefList.Clear();
-            if (searchWithFilter)
-                Plugin.Instance.StartCoroutine(TootTallyAPIService.SearchSongWithFilters(input, _toggleRated.isOn, _toggleUnrated.isOn, OnSearchInfoRecieved));
-            else
-                Plugin.Instance.StartCoroutine(TootTallyAPIService.SearchSongByURL(input, OnSearchInfoRecieved));
+            // _trackRefList.Clear();
+            // if (searchWithFilter)
+            //     Plugin.Instance.StartCoroutine(TootTallyAPIService.SearchSongWithFilters(input, _toggleRated.isOn, _toggleUnrated.isOn, OnSearchInfoRecieved));
+            // else
+            //     Plugin.Instance.StartCoroutine(TootTallyAPIService.SearchSongByURL(input, OnSearchInfoRecieved));
 
         }
     }
