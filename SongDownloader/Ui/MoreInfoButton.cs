@@ -1,6 +1,7 @@
 #nullable enable
 
 using TootTallyCore.Utils.Assets;
+using TootTallyCore.Utils.TootTallyNotifs;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -49,7 +50,8 @@ public class MoreInfoButton
         var button = bodyGo.GetComponent<Button>();
         button.onClick.AddListener(() =>
         {
-            Debug.Log("OHAI!");
+            TootTallyNotifManager.DisplayNotif("Coming soon... Sorry!");
+            Plugin.LogInfo("NOT IMPLEMENTED YET!! OHAI!");
         });
 
         // Create panel fill ///////////////////////////////////////////////////////////////////////////////////////////
