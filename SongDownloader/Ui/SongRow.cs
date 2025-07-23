@@ -97,6 +97,12 @@ public class SongRow : IDisposable
         return this;
     }
 
+    internal SongRow WithIsRated(bool rated)
+    {
+        _mainBody.WithIsRated(rated);
+        return this;
+    }
+
     internal SongRow WithDownloadState(DownloadState state)
     {
         _downloadButton.WithDownloadState(state);

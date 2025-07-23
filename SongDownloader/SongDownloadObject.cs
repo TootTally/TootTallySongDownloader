@@ -87,6 +87,7 @@ namespace TootTallySongDownloader
                 .WithDurationSeconds(song.song_length)
                 .WithDifficulty(song.difficulty)
                 .WithCharter(song.charter)
+                .WithIsRated(song.is_rated)
                 .WithIsDeletable(IsTrackDeletable(song.track_ref))
                 .OnDownload(() => DownloadChart(DownloadSource.Auto))
                 .OnDownloadFromTootTally(() => DownloadChart(DownloadSource.TootTallyMirror))

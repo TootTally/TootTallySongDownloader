@@ -19,6 +19,7 @@ public class MainBody
     private readonly StatDisplay _durationStatDisplay;
     private readonly StatDisplay _difficultyStatDisplay;
     private readonly StatDisplay _charterStatDisplay;
+    private readonly GameObject _ratedIconGo;
 
     /// <summary>
     /// Private ctor, use <c>Create</c> instead
@@ -29,7 +30,8 @@ public class MainBody
         TMP_Text artistText,
         StatDisplay durationStatDisplay,
         StatDisplay difficultyStatDisplay,
-        StatDisplay charterStatDisplay
+        StatDisplay charterStatDisplay,
+        GameObject ratedIconGo
     )
     {
         _gameObject = gameObject;
@@ -38,6 +40,7 @@ public class MainBody
         _durationStatDisplay = durationStatDisplay;
         _difficultyStatDisplay = difficultyStatDisplay;
         _charterStatDisplay = charterStatDisplay;
+        _ratedIconGo = ratedIconGo;
     }
 
     internal static MainBody Create()
@@ -163,6 +166,17 @@ public class MainBody
         rightTopBoxLayout.childAlignment = TextAnchor.UpperRight;
         rightTopBoxLayout.spacing = 8f;
 
+        var ratedIcon = new GameObject(
+            "RatedIcon",
+            typeof(RectTransform),
+            typeof(Image)
+        );
+        var ratedIconTf = (RectTransform)ratedIcon.transform;
+        ratedIconTf.SetParent(rightTopBoxTf, false);
+        var ratedIconImage = ratedIcon.GetComponent<Image>();
+        ratedIconImage.sprite = AssetManager.GetSprite("rated64.png");
+        ((RectTransform)ratedIconImage.transform).sizeDelta = Vector2.one * 20f;
+
         var durationStatDisplay = StatDisplay.Create().WithParent(rightTopBoxTf).WithIcon("time64.png");
         var difficultyStatDisplay = StatDisplay.Create().WithParent(rightTopBoxTf).WithIcon("stardiff64.png");
 
@@ -190,15 +204,14 @@ public class MainBody
 
         var charterStatDisplay = StatDisplay.Create().WithParent(rightBottomBoxTf).WithIcon("Pencil64.png");
 
-        // TODO: Add ranked icon somewhere
-
         return new MainBody(
             gameObject: bodyGo,
             songNameText: songNameText,
             artistText: artistText,
             durationStatDisplay: durationStatDisplay,
             difficultyStatDisplay: difficultyStatDisplay,
-            charterStatDisplay: charterStatDisplay
+            charterStatDisplay: charterStatDisplay,
+            ratedIconGo: ratedIcon
         );
     }
 
@@ -253,6 +266,12 @@ public class MainBody
     internal MainBody WithCharter(string charterDisplayName)
     {
         _charterStatDisplay.WithText(charterDisplayName);
+        return this;
+    }
+
+    internal MainBody WithIsRated(bool rated)
+    {
+        _ratedIconGo.SetActive(rated);
         return this;
     }
 }
