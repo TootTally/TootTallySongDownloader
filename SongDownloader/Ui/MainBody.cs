@@ -222,8 +222,24 @@ public class MainBody
 
     internal MainBody WithDurationSeconds(float seconds)
     {
-        var time = TimeSpan.FromSeconds(seconds);
-        var stringTime = $"{(time.Hours != 0 ? (time.Hours + ":") : "")}{(time.Minutes != 0 ? time.Minutes : "0")}:{(time.Seconds != 0 ? time.Seconds : "00"):00}";
+        var totalSeconds = (uint)seconds;
+        var dispSeconds = totalSeconds % 60;
+
+        var totalMinutes = totalSeconds / 60;
+        var dispMinutes = totalMinutes % 60;
+
+        var totalHours = totalMinutes / 60;
+
+        string stringTime;
+        if (totalHours > 0)
+        {
+            stringTime = $"{totalHours}:{dispMinutes:D2}:{dispSeconds:D2}";
+        }
+        else
+        {
+            stringTime = $"{dispMinutes}:{dispSeconds:D2}";
+        }
+
         _durationStatDisplay.WithText(stringTime);
         return this;
     }

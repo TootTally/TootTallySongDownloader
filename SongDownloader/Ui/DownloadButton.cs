@@ -78,10 +78,6 @@ public class DownloadButton
         bodyLayoutElem.preferredWidth = 64f;
 
         var button = bodyGo.GetComponent<Button>();
-        button.onClick.AddListener(() =>
-        {
-            Debug.Log("OHAI!");
-        });
 
         // Create panel fill ///////////////////////////////////////////////////////////////////////////////////////////
         var fillGo = new GameObject(
