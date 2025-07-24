@@ -382,7 +382,10 @@ namespace TootTallySongDownloader
         private bool IsTrackDeletable(string trackRef)
         {
             var page = (SongDownloadPage)_page;
-            return FSharpOption<TromboneTrack>.get_IsSome(TrackLookup.tryLookup(trackRef)) && !page.WasTrackDeleted(trackRef);
+            var trackOpt = TrackLookup.tryLookup(trackRef);
+            return FSharpOption<TromboneTrack>.get_IsSome(trackOpt)
+                   && trackOpt.Value is CustomTrack
+                   && !page.WasTrackDeleted(trackRef);
         }
 
         private bool HasTrackDownloaded(string trackRef)
@@ -412,7 +415,6 @@ namespace TootTallySongDownloader
                 switch (_fileData)
                 {
                     case FileDataState.ErrorFetchingData:
-                        Debug.LogError($"NAH DATA");
                         _songRow.WithDownloadState(new DownloadState.DownloadUnavailable());
                         break;
 
