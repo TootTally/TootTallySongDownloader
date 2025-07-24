@@ -2,27 +2,27 @@ using TootTallyCore.Graphics.ProgressCounters;
 
 namespace TootTallySongDownloader;
 
-internal record DownloadState
+internal abstract record DownloadState
 {
     /// <summary>
     /// Waiting for a response from the TootTally API to see if this chart has a download/some metadata
     /// </summary>
-    internal record Waiting : DownloadState;
+    internal sealed record Waiting : DownloadState;
 
     /// <summary>
     /// User does not have the chart but a download is available
     /// </summary>
-    internal record DownloadAvailable : DownloadState;
+    internal sealed record DownloadAvailable : DownloadState;
 
     /// <summary>
     /// User does not have the chart and no download could be found
     /// </summary>
-    internal record DownloadUnavailable : DownloadState;
+    internal sealed record DownloadUnavailable : DownloadState;
 
     /// <summary>
     /// The chart is currently downloading
     /// </summary>
-    internal record Downloading : DownloadState
+    internal sealed record Downloading : DownloadState
     {
         internal ProgressCounter Progress;
     }
@@ -30,5 +30,5 @@ internal record DownloadState
     /// <summary>
     /// The user has the chart
     /// </summary>
-    internal record Owned : DownloadState;
+    internal sealed record Owned : DownloadState;
 }

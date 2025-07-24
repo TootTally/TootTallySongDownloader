@@ -2,7 +2,6 @@
 
 using System;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace TootTallySongDownloader.Ui;
@@ -17,15 +16,22 @@ public class SongRow : IDisposable
     private RectTransform Transform => (RectTransform)GameObject.transform;
 
     private readonly MainBody _mainBody;
+    private readonly MoreInfoButton _moreInfoButton;
     private readonly DownloadButton _downloadButton;
 
     /// <summary>
     /// Private ctor, use <c>Create</c> instead
     /// </summary>
-    private SongRow(GameObject gameObject, MainBody mainBody, DownloadButton downloadButton)
+    private SongRow(
+        GameObject gameObject,
+        MainBody mainBody,
+        MoreInfoButton moreInfoButton,
+        DownloadButton downloadButton
+    )
     {
         GameObject = gameObject;
         _mainBody = mainBody;
+        _moreInfoButton = moreInfoButton;
         _downloadButton = downloadButton;
     }
 
@@ -49,10 +55,10 @@ public class SongRow : IDisposable
 
         // Create each part of the row /////////////////////////////////////////////////////////////////////////////////
         var mainBody = MainBody.Create().WithParent(songRowTf);
-        MoreInfoButton.Create().WithParent(songRowTf);
+        var moreInfoButton = MoreInfoButton.Create().WithParent(songRowTf);
         var downloadButton = DownloadButton.Create().WithParent(songRowTf);
 
-        return new SongRow(rowGo, mainBody, downloadButton);
+        return new SongRow(rowGo, mainBody, moreInfoButton, downloadButton);
     }
 
     internal SongRow WithParent(Transform parent)
@@ -91,9 +97,16 @@ public class SongRow : IDisposable
         return this;
     }
 
+    internal SongRow WithIsRated(bool rated)
+    {
+        _mainBody.WithIsRated(rated);
+        return this;
+    }
+
     internal SongRow WithDownloadState(DownloadState state)
     {
         _downloadButton.WithDownloadState(state);
+        _moreInfoButton.WithDownloadState(state);
         return this;
     }
 
@@ -103,9 +116,39 @@ public class SongRow : IDisposable
         return this;
     }
 
+    internal SongRow WithSongId(int songId)
+    {
+        _moreInfoButton.WithSongId(songId);
+        return this;
+    }
+
+    internal SongRow WithIsDeletable(bool isDeletable)
+    {
+        _moreInfoButton.WithIsDeletable(isDeletable);
+        return this;
+    }
+
     internal SongRow OnDownload(Action callback)
     {
         _downloadButton.OnDownload(callback);
+        return this;
+    }
+
+    internal SongRow OnDownloadFromTootTally(Action callback)
+    {
+        _moreInfoButton.OnDownloadFromTootTally(callback);
+        return this;
+    }
+
+    internal SongRow OnDownloadFromAlternative(Action callback)
+    {
+        _moreInfoButton.OnDownloadFromAlternative(callback);
+        return this;
+    }
+
+    internal SongRow OnDelete(Action callback)
+    {
+        _moreInfoButton.OnDelete(callback);
         return this;
     }
 
