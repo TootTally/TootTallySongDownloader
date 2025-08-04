@@ -22,9 +22,10 @@ namespace TootTallySongDownloader.SongDownloader
         private GameObject _searchButton;
         private GameObject _nextButton, _prevButton;
         private LoadingIcon _loadingIcon;
-        private List<string> _newDownloadedTrackRefs;
+        private readonly List<string> _newDownloadedTrackRefs;
         public ChartPackDownloadPage() : base("Chart Packs", "Chart Packs", 20f, new Color(0, 0, 0, 0.1f), GetButtonColors)
         {
+            _newDownloadedTrackRefs = new List<string>();
         }
 
         private static ColorBlock GetButtonColors => new ColorBlock()
