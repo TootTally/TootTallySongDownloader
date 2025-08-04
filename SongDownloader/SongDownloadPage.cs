@@ -23,15 +23,19 @@ namespace TootTallySongDownloader
         private GameObject _downloadAllButton;
         private Toggle _toggleRated, _toggleUnrated, _toggleNotOwned;
         private LoadingIcon _loadingIcon;
-        private readonly List<string> _trackRefList = [];
-        private readonly List<string> _newDownloadedTrackRefs = [];
-        private readonly List<string> _deletedTrackRefs = [];
-        private readonly List<SongDownloadObject> _downloadObjectList = [];
+        private readonly List<string> _trackRefList;
+        private readonly List<string> _newDownloadedTrackRefs;
+        private readonly List<string> _deletedTrackRefs;
+        private readonly List<SongDownloadObject> _downloadObjectList;
         public bool ShowNotOwnedOnly => _toggleNotOwned.isOn;
 
 
         public SongDownloadPage() : base("MoreSongs", "More Songs", 20f, new Color(0, 0, 0, 0.1f), GetButtonColors)
         {
+            _trackRefList = new List<string>();
+            _newDownloadedTrackRefs = new List<string>();
+            _deletedTrackRefs = new List<string>();
+            _downloadObjectList = new List<SongDownloadObject>();
         }
 
         private static ColorBlock GetButtonColors => new ColorBlock()

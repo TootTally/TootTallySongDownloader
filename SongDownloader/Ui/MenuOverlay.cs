@@ -59,10 +59,10 @@ internal class MenuOverlay
 
         var closeButtonTf = (RectTransform)closeButtonGo.transform;
         closeButtonTf.SetParent(canvasTf, false);
-        closeButtonTf.anchorMin = new Vector2(0f, 0f);
-        closeButtonTf.anchorMax = new Vector2(1f, 1f);
-        closeButtonTf.offsetMin = new Vector2(0f, 0f);
-        closeButtonTf.offsetMax = new Vector2(0f, 0f);
+        closeButtonTf.anchorMin = Vector2.zero;
+        closeButtonTf.anchorMax = Vector2.one;
+        closeButtonTf.offsetMin = Vector2.zero;
+        closeButtonTf.offsetMax = Vector2.zero;
 
         var closeButton = closeButtonGo.GetComponent<Button>();
 
@@ -159,7 +159,7 @@ internal class MenuOverlay
         itemListVlg.padding = new RectOffset(1, 1, 1, 1);
 
         var ret = new MenuOverlay(canvasGo, mainBodyGo);
-        closeButton.onClick.AddListener(() => ret.Hide());
+        closeButton.onClick.AddListener(ret.Hide);
 
         return ret;
     }
