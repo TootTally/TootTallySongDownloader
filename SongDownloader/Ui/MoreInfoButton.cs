@@ -20,9 +20,9 @@ public class MoreInfoButton
     private bool _isDeletable = false;
     private DownloadState _downloadState = new DownloadState.Waiting();
 
-    private readonly List<Action> _onDownloadFromTootTally = [];
-    private readonly List<Action> _onDownloadFromAlternative = [];
-    private readonly List<Action> _onDelete = [];
+    private readonly List<Action> _onDownloadFromTootTally;
+    private readonly List<Action> _onDownloadFromAlternative;
+    private readonly List<Action> _onDelete;
 
     /// <summary>
     /// Private ctor, use <c>Create</c> instead
@@ -30,6 +30,9 @@ public class MoreInfoButton
     private MoreInfoButton(GameObject gameObject)
     {
         _gameObject = gameObject;
+        _onDownloadFromTootTally = new List<Action>();
+        _onDownloadFromAlternative = new List<Action>();
+        _onDelete = new List<Action>();
     }
 
     internal static MoreInfoButton Create()
