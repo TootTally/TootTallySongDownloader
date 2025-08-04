@@ -7,7 +7,6 @@ using TootTallyCore.Graphics;
 using TootTallyCore.Utils.Assets;
 using TootTallyCore.Utils.TootTallyNotifs;
 using TootTallySettings;
-using TootTallySongDownloader.SongDownloader;
 using UnityEngine;
 using UnityEngine.UI;
 using static TootTallyCore.APIServices.SerializableClass;
@@ -23,10 +22,9 @@ namespace TootTallySongDownloader
         private GameObject _downloadAllButton;
         private Toggle _toggleRated, _toggleUnrated, _toggleNotOwned;
         private LoadingIcon _loadingIcon;
-        private readonly List<string> _trackRefList = [];
-        private readonly List<string> _newDownloadedTrackRefs = [];
-        private readonly List<string> _deletedTrackRefs = [];
-        private readonly List<SongDownloadObject> _downloadObjectList = [];
+        private List<string> _trackRefList;
+        private List<string> _newDownloadedTrackRefs;
+        private List<SongDownloadObject> _downloadObjectList;
         public bool ShowNotOwnedOnly => _toggleNotOwned.isOn;
 
 
@@ -47,6 +45,10 @@ namespace TootTallySongDownloader
         public override void Initialize()
         {
             base.Initialize();
+            _trackRefList = new List<string>();
+            _newDownloadedTrackRefs = new List<string>();
+            _downloadObjectList = new List<SongDownloadObject>();
+
             _inputField = TootTallySettingObjectFactory.CreateInputField(_fullPanel.transform, $"{name}InputField", DEFAULT_OBJECT_SIZE, DEFAULT_FONTSIZE, DEFAULT_INPUT_TEXT, false);
             _inputField.onSubmit.AddListener(value => Search(_inputField.text));
             _inputField.GetComponent<RectTransform>().anchorMin = _inputField.GetComponent<RectTransform>().anchorMax = new Vector2(.72f, .7f);
@@ -70,13 +72,13 @@ namespace TootTallySongDownloader
             _downloadAllButton = GameObjectFactory.CreateCustomButton(_fullPanel.transform, new Vector2(-1330, -87), new Vector2(200, 60), "Download All", "DownloadAllButton", DownloadAll).gameObject;
             _downloadAllButton.SetActive(false);
 
+            // SetSongRowPrefab();
             _backButton.button.onClick.AddListener(() =>
             {
-                if (_newDownloadedTrackRefs.Count > 0 || _deletedTrackRefs.Count > 0)
+                if (_newDownloadedTrackRefs.Count > 0)
                 {
-                    TootTallyNotifManager.DisplayNotif("Reloading songs...");
+                    TootTallyNotifManager.DisplayNotif("New tracks detected, Reloading songs...\nLagging is normal.");
                     _newDownloadedTrackRefs.Clear();
-                    _deletedTrackRefs.Clear();
                     TootTallyCore.Plugin.Instance.Invoke("ReloadTracks", 0.35f);
                 }
             });
@@ -149,16 +151,18 @@ namespace TootTallySongDownloader
                 _prevButton = GameObjectFactory.CreateCustomButton(_fullPanel.transform, new Vector2(-700, -175), new Vector2(50, 50), "<<", $"{name}PrevButton", () => Search(searchInfo.previous, false)).gameObject;
         }
 
+#nullable disable
+
         public void UpdateDownloadAllButton()
         {
             if (!_downloadAllButton.activeSelf)
-                _downloadAllButton.SetActive(_downloadObjectList.Any(o => o.IsDownloadAvailable));
+                _downloadAllButton.SetActive(_downloadObjectList.Any(o => o.isDownloadAvailable));
         }
 
         private void DownloadAll()
         {
             _downloadAllButton.SetActive(false);
-            _downloadObjectList.Where(o => o.IsDownloadAvailable).Do(o => o.DownloadChart(DownloadSource.Auto));
+            _downloadObjectList.Where(o => o.isDownloadAvailable).Do(o => o.DownloadChart());
         }
 
         private void AddSongToPage(SongDataFromDB song)
@@ -166,31 +170,17 @@ namespace TootTallySongDownloader
             if (_trackRefList.Contains(song.track_ref)) return;
             _trackRefList.Add(song.track_ref);
             var songDownloadObj = new SongDownloadObject(gridPanel.transform, song, this);
-            songDownloadObj.SetActive(!(_toggleNotOwned.isOn && songDownloadObj.IsOwned));
+            songDownloadObj.SetActive(!(_toggleNotOwned.isOn && songDownloadObj.isOwned));
             _downloadObjectList.Add(songDownloadObj);
             AddSettingObjectToList(songDownloadObj);
         }
 
         private void OnNotOwnedToggle(bool value)
         {
-            _downloadObjectList.ForEach(x => x.SetActive(!(value && x.IsOwned)));
+            _downloadObjectList.ForEach(x => x.SetActive(!(value && x.isOwned)));
         }
 
-        internal void AddTrackRefToDownloadedSong(string trackref)
-        {
-            _newDownloadedTrackRefs.Add(trackref);
-            _deletedTrackRefs.Remove(trackref);
-        }
-
-        internal void MarkTrackDeleted(string trackref)
-        {
-            _deletedTrackRefs.Add(trackref);
-            _newDownloadedTrackRefs.Remove(trackref);
-        }
-
+        public void AddTrackRefToDownloadedSong(string trackref) => _newDownloadedTrackRefs.Add(trackref);
         public bool IsAlreadyDownloaded(string trackref) => _newDownloadedTrackRefs.Contains(trackref);
-        public bool WasTrackDeleted(string trackref) => _deletedTrackRefs.Contains(trackref);
-
-#nullable disable
     }
 }

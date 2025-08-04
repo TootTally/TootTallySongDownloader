@@ -1,8 +1,7 @@
 #nullable enable
 
-using System;
-using System.Collections.Generic;
 using TootTallyCore.Utils.Assets;
+using TootTallyCore.Utils.TootTallyNotifs;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,14 +14,6 @@ public class MoreInfoButton
 {
     private readonly GameObject _gameObject;
     private RectTransform Transform => (RectTransform)_gameObject.transform;
-
-    private int _songId;
-    private bool _isDeletable = false;
-    private DownloadState _downloadState = new DownloadState.Waiting();
-
-    private readonly List<Action> _onDownloadFromTootTally = [];
-    private readonly List<Action> _onDownloadFromAlternative = [];
-    private readonly List<Action> _onDelete = [];
 
     /// <summary>
     /// Private ctor, use <c>Create</c> instead
@@ -57,6 +48,11 @@ public class MoreInfoButton
         bodyLayoutElem.preferredWidth = 24f;
 
         var button = bodyGo.GetComponent<Button>();
+        button.onClick.AddListener(() =>
+        {
+            TootTallyNotifManager.DisplayNotif("Coming soon... Sorry!");
+            Plugin.LogInfo("NOT IMPLEMENTED YET!! OHAI!");
+        });
 
         // Create panel fill ///////////////////////////////////////////////////////////////////////////////////////////
         var fillGo = new GameObject(
@@ -137,111 +133,12 @@ public class MoreInfoButton
 
         iconGo.GetComponent<Image>().sprite = AssetManager.GetSprite("MoreInfoIcon.png");
 
-        var ret = new MoreInfoButton(bodyGo);
-        button.onClick.AddListener(() => ret.OpenMenu());
-
-        return ret;
+        return new MoreInfoButton(bodyGo);
     }
 
     internal MoreInfoButton WithParent(Transform parent)
     {
         Transform.SetParent(parent, false);
         return this;
-    }
-
-    internal MoreInfoButton WithSongId(int songId)
-    {
-        _songId = songId;
-        return this;
-    }
-
-    internal MoreInfoButton WithDownloadState(DownloadState downloadState)
-    {
-        _downloadState = downloadState;
-        return this;
-    }
-
-    internal MoreInfoButton WithIsDeletable(bool isDeletable)
-    {
-        _isDeletable = isDeletable;
-        return this;
-    }
-
-    internal MoreInfoButton OnDownloadFromTootTally(Action callback)
-    {
-        _onDownloadFromTootTally.Add(callback);
-        return this;
-    }
-
-    internal MoreInfoButton OnDownloadFromAlternative(Action callback)
-    {
-        _onDownloadFromAlternative.Add(callback);
-        return this;
-    }
-
-    internal MoreInfoButton OnDelete(Action callback)
-    {
-        _onDelete.Add(callback);
-        return this;
-    }
-
-    private void OpenMenu()
-    {
-        var menu = MenuOverlay.Create()
-            .WithItem(
-                "View on TootTally.com",
-                () => Application.OpenURL($"https://toottally.com/song/{_songId}/")
-            );
-
-        switch (_downloadState)
-        {
-            case DownloadState.DownloadAvailable:
-                menu.WithItem(
-                    "Download from TootTally",
-                    () => _onDownloadFromTootTally.ForEach(action => action())
-                );
-                menu.WithItem(
-                    "Download from alternate source",
-                    () => _onDownloadFromAlternative.ForEach(action => action())
-                );
-                break;
-
-            case DownloadState.DownloadUnavailable:
-                menu.WithItem(
-                    "Try download anyway from TootTally",
-                    () => _onDownloadFromTootTally.ForEach(action => action())
-                );
-                menu.WithItem(
-                    "Try download anyway from alternate source",
-                    () => _onDownloadFromAlternative.ForEach(action => action())
-                );
-                break;
-
-            case DownloadState.Owned:
-                menu.WithItem(
-                    "Redownload from TootTally",
-                    () => _onDownloadFromTootTally.ForEach(action => action())
-                );
-                menu.WithItem(
-                    "Redownload from alternate source",
-                    () => _onDownloadFromAlternative.ForEach(action => action())
-                );
-                break;
-
-            case DownloadState.Waiting:
-            case DownloadState.Downloading:
-                // Don't show download options
-                break;
-        }
-
-        if (_isDeletable)
-        {
-            menu.WithItem(
-                "Delete",
-                () => _onDelete.ForEach(action => action())
-            );
-        }
-
-        menu.ShowAtCursor();
     }
 }
