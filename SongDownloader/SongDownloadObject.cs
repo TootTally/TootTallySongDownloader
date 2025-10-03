@@ -97,7 +97,8 @@ namespace TootTallySongDownloader
                 .OnDownloadFromAlternative(() => DownloadChart(DownloadSource.Alternate))
                 .OnDelete(DeleteChart);
 
-            if (!SongDownloadManager.HasTrackDownloaded(song.track_ref))
+            IsOwned = SongDownloadManager.HasTrackDownloaded(song.track_ref);
+            if (!IsOwned)
             {
                 // User does not have the chart downloaded, query some info from the TootTally API
                 TryRequestFileData();
