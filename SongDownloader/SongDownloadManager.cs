@@ -15,9 +15,7 @@ using TootTallyCore.APIServices;
 using TootTallyCore.Graphics.ProgressCounters;
 using TootTallyCore.Utils.Helpers;
 using TootTallyCore.Utils.TootTallyNotifs;
-using TootTallySongDownloader.Ui;
 using TrombLoader.CustomTracks;
-using static TootTallyCore.APIServices.SerializableClass;
 
 namespace TootTallySongDownloader.SongDownloader
 {
