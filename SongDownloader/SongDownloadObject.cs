@@ -1,9 +1,9 @@
 ﻿#nullable enable
 
-using System;
 using BaboonAPI.Hooks.Tracks;
 using BepInEx;
 using Microsoft.FSharp.Core;
+using System;
 using System.IO;
 using TootTallyCore.APIServices;
 using TootTallyCore.Graphics.ProgressCounters;
@@ -14,11 +14,13 @@ using TootTallySongDownloader.SongDownloader;
 using TootTallySongDownloader.Ui;
 using TrombLoader.CustomTracks;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.UIElements.UIR;
 using static TootTallyCore.APIServices.SerializableClass;
 
 namespace TootTallySongDownloader
 {
-    internal class SongDownloadObject : BaseTootTallySettingObject
+    public class SongDownloadObject : BaseTootTallySettingObject
     {
         // Wow, sum types are verbose as heck in C#
         /// <summary>
@@ -64,8 +66,9 @@ namespace TootTallySongDownloader
             internal sealed record ErrorFetchingData : FileDataState;
         }
 
-        private readonly SongRow _songRow;
-        private readonly SongDataFromDB _song;
+        public SongRow GetSongRow { get; private set; }
+        public SongDataFromDB GetSong { get; private set; }
+        private readonly SongDownloadPage _songDownloadPage;
         public bool IsOwned;
 
         public bool IsDownloadAvailable => !IsOwned && _fileData is FileDataState.HasData;
@@ -75,11 +78,11 @@ namespace TootTallySongDownloader
         /// </summary>
         private FileDataState _fileData = new FileDataState.Unknown();
 
-        public SongDownloadObject(Transform canvasTransform, SongDataFromDB song, TootTallySettingPage page) : base($"Song{song.track_ref}", page)
+        public SongDownloadObject(Transform canvasTransform, SongDataFromDB song, SongDownloadPage page) : base($"Song{song.track_ref}", page)
         {
-            _song = song;
-
-            _songRow = SongRow.Create()
+            GetSong = song;
+            _songDownloadPage = page;
+            GetSongRow = SongRow.Create()
                 .WithParent(canvasTransform)
                 .WithSongId(song.id)
                 .WithSongName(song.name)
@@ -88,13 +91,13 @@ namespace TootTallySongDownloader
                 .WithDifficulty(song.difficulty)
                 .WithCharter(song.charter)
                 .WithIsRated(song.is_rated)
-                .WithIsDeletable(IsTrackDeletable(song.track_ref))
+                .WithIsDeletable(SongDownloadManager.IsTrackDeletable(song.track_ref))
                 .OnDownload(() => DownloadChart(DownloadSource.Auto))
                 .OnDownloadFromTootTally(() => DownloadChart(DownloadSource.TootTallyMirror))
                 .OnDownloadFromAlternative(() => DownloadChart(DownloadSource.Alternate))
                 .OnDelete(DeleteChart);
 
-            if (!HasTrackDownloaded(song.track_ref))
+            if (!SongDownloadManager.HasTrackDownloaded(song.track_ref))
             {
                 // User does not have the chart downloaded, query some info from the TootTally API
                 TryRequestFileData();
@@ -102,15 +105,15 @@ namespace TootTallySongDownloader
             else
             {
                 // User already has the song
-                _songRow.WithDownloadState(new DownloadState.Owned());
+                GetSongRow.WithDownloadState(new DownloadState.Owned());
             }
         }
 
-        public void SetActive(bool active) => _songRow.GameObject.SetActive(active);
+        public void SetActive(bool active) => GetSongRow.GameObject.SetActive(active);
 
         public override void Dispose()
         {
-            _songRow.Dispose();
+            GetSongRow.Dispose();
 
             if (_fileData is FileDataState.WaitingOnRequest waitingOnRequest)
             {
@@ -121,13 +124,13 @@ namespace TootTallySongDownloader
         public void DownloadChart(DownloadSource dlSource)
         {
             var progress = new ProgressCounter();
-            _songRow.WithDownloadState(new DownloadState.Downloading { Progress = progress });
+            GetSongRow.WithDownloadState(new DownloadState.Downloading { Progress = progress });
 
             var link = dlSource switch
             {
-                DownloadSource.TootTallyMirror => _song.mirror,
-                DownloadSource.Alternate => _song.download,
-                DownloadSource.Auto => _song.mirror ?? _song.download,
+                DownloadSource.TootTallyMirror => GetSong.mirror,
+                DownloadSource.Alternate => GetSong.download,
+                DownloadSource.Auto => GetSong.mirror ?? GetSong.download,
                 _ => throw new ArgumentOutOfRangeException(nameof(dlSource), dlSource, null)
             };
             if (string.IsNullOrEmpty(link))
@@ -136,145 +139,21 @@ namespace TootTallySongDownloader
                 TootTallyNotifManager.DisplayError("Missing download link");
                 return;
             }
+            SongDownloadManager.AddToQueue(link, progress, this);
+        }
 
-            Plugin.Instance.StartCoroutine(TootTallyAPIService.DownloadZipFromServer(
-                link,
-                progress,
-                data =>
-                {
-                    if (data != null)
-                    {
-                        var downloadDir = Path.Combine(Path.GetDirectoryName(Plugin.Instance.Info.Location)!, "Downloads/");
-                        var fileName = $"{_song.id}.zip";
+        public void OnSongDownload(bool success = true)
+        {
+            if (!success)
+            {
+                GetSongRow.WithDownloadState(new DownloadState.DownloadAvailable());
+                return;
+            }
 
-                        try
-                        {
-                            if (!Directory.Exists(downloadDir))
-                                Directory.CreateDirectory(downloadDir);
-                        }
-                        catch (IOException e)
-                        {
-                            Plugin.LogError(e.ToString());
-
-                            TootTallyNotifManager.DisplayNotif("IO error creating download directory");
-                            _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-
-                            return;
-                        }
-                        catch (UnauthorizedAccessException e)
-                        {
-                            Plugin.LogError(e.ToString());
-
-                            TootTallyNotifManager.DisplayNotif("Insufficient permissions while creating download directory");
-                            _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-
-                            return;
-                        }
-                        catch (Exception e)
-                        {
-                            Plugin.LogError(e.ToString());
-
-                            TootTallyNotifManager.DisplayNotif("Unknown error creating download directory (check logs!)");
-                            _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-
-                            return;
-                        }
-
-                        try
-                        {
-                            FileHelper.WriteBytesToFile(downloadDir, fileName, data);
-                        }
-                        catch (IOException e)
-                        {
-                            Plugin.LogError(e.ToString());
-
-                            TootTallyNotifManager.DisplayNotif("IO error writing ZIP archive");
-                            _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-
-                            return;
-                        }
-                        catch (UnauthorizedAccessException e)
-                        {
-                            Plugin.LogError(e.ToString());
-
-                            TootTallyNotifManager.DisplayNotif("Insufficient permissions while writing ZIP archive");
-                            _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-
-                            return;
-                        }
-                        catch (Exception e)
-                        {
-                            Plugin.LogError(e.ToString());
-
-                            TootTallyNotifManager.DisplayNotif("Unknown error writing ZIP archive (check logs!)");
-                            _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-
-                            return;
-                        }
-
-                        var source = Path.Combine(downloadDir, fileName);
-                        var destination = Path.Combine(Paths.BepInExRootPath, "CustomSongs/");
-
-                        try
-                        {
-                            FileHelper.ExtractZipToDirectory(source, destination);
-                        }
-                        catch (InvalidDataException e)
-                        {
-                            Plugin.LogError(e.ToString());
-
-                            TootTallyNotifManager.DisplayNotif("Downloaded file was not a ZIP archive");
-                            _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-
-                            return;
-                        }
-                        catch (IOException e)
-                        {
-                            Plugin.LogError(e.ToString());
-
-                            TootTallyNotifManager.DisplayNotif("IO error extracting ZIP archive");
-                            _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-
-                            return;
-                        }
-                        catch (UnauthorizedAccessException e)
-                        {
-                            Plugin.LogError(e.ToString());
-
-                            TootTallyNotifManager.DisplayNotif("Insufficient permissions while extracting ZIP archive");
-                            _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-
-                            return;
-                        }
-                        catch (Exception e)
-                        {
-                            Plugin.LogError(e.ToString());
-
-                            TootTallyNotifManager.DisplayNotif("Unknown error extracting ZIP archive (check logs!)");
-                            _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-
-                            return;
-                        }
-                        finally
-                        {
-                            FileHelper.DeleteFile(downloadDir, fileName);
-                        }
-
-                        IsOwned = true;
-
-                        _songRow.WithDownloadState(new DownloadState.Owned());
-
-                        var page = (SongDownloadPage)_page;
-                        page.AddTrackRefToDownloadedSong(_song.track_ref);
-                        SetActive(!page.ShowNotOwnedOnly);
-                    }
-                    else
-                    {
-                        TootTallyNotifManager.DisplayNotif("Download failed.");
-                        _songRow.WithDownloadState(new DownloadState.DownloadAvailable());
-                    }
-                }
-            ));
+            IsOwned = true;
+            GetSongRow.WithDownloadState(new DownloadState.Owned());
+            SetActive(!((SongDownloadPage)_page).ShowNotOwnedOnly);
+            SongDownloadManager.AddTrackRefToDownloadedSong(GetSong.track_ref);
         }
 
         /// <summary>
@@ -283,7 +162,7 @@ namespace TootTallySongDownloader
         /// <returns>The directory, or <c>null</c> if the track is not loaded by TrombLoader</returns>
         private string? GetLocalChartDirectory()
         {
-            var trackOpt = TrackLookup.tryLookup(_song.track_ref);
+            var trackOpt = TrackLookup.tryLookup(GetSong.track_ref);
             if (FSharpOption<TromboneTrack>.get_IsNone(trackOpt))
             {
                 return null;
@@ -362,10 +241,10 @@ namespace TootTallySongDownloader
                 }
 
                 IsOwned = false;
-                _songRow.WithIsDeletable(false);
+                GetSongRow.WithIsDeletable(false);
 
                 // Reload tracks when exiting this page
-                ((SongDownloadPage)_page).MarkTrackDeleted(_song.track_ref);
+                SongDownloadManager.MarkTrackDeleted(GetSong.track_ref);
 
                 UpdateUiDownloadState();
                 TryRequestFileData(); // If we don't know the file info (eg: filesize), request it now
@@ -379,22 +258,6 @@ namespace TootTallySongDownloader
             }
         }
 
-        private bool IsTrackDeletable(string trackRef)
-        {
-            var page = (SongDownloadPage)_page;
-            var trackOpt = TrackLookup.tryLookup(trackRef);
-            return FSharpOption<TromboneTrack>.get_IsSome(trackOpt)
-                   && trackOpt.Value is CustomTrack
-                   && !page.WasTrackDeleted(trackRef);
-        }
-
-        private bool HasTrackDownloaded(string trackRef)
-        {
-            var page = (SongDownloadPage)_page;
-            return (FSharpOption<TromboneTrack>.get_IsSome(TrackLookup.tryLookup(trackRef)) && !page.WasTrackDeleted(trackRef))
-                   || page.IsAlreadyDownloaded(trackRef);
-        }
-
         /// <summary>
         /// Set <c>_fileData</c>, updating the UI along the way
         /// </summary>
@@ -406,16 +269,16 @@ namespace TootTallySongDownloader
 
         private void UpdateUiDownloadState()
         {
-            if (HasTrackDownloaded(_song.track_ref))
+            if (SongDownloadManager.HasTrackDownloaded(GetSong.track_ref))
             {
-                _songRow.WithDownloadState(new DownloadState.Owned());
+                GetSongRow.WithDownloadState(new DownloadState.Owned());
             }
             else
             {
                 switch (_fileData)
                 {
                     case FileDataState.ErrorFetchingData:
-                        _songRow.WithDownloadState(new DownloadState.DownloadUnavailable());
+                        GetSongRow.WithDownloadState(new DownloadState.DownloadUnavailable());
                         break;
 
                     case FileDataState.HasData hasData:
@@ -426,20 +289,20 @@ namespace TootTallySongDownloader
                             case "x-zip":
                             case "zip-compressed":
                             case "x-zip-compressed":
-                                _songRow
+                                GetSongRow
                                     .WithFileSize(hasData.FileData.size)
                                     .WithDownloadState(new DownloadState.DownloadAvailable());
                                 break;
 
                             default:
-                                _songRow.WithDownloadState(new DownloadState.DownloadUnavailable());
+                                GetSongRow.WithDownloadState(new DownloadState.DownloadUnavailable());
                                 break;
                         }
                         break;
 
                     case FileDataState.Unknown:
                     case FileDataState.WaitingOnRequest:
-                        _songRow.WithDownloadState(new DownloadState.Waiting());
+                        GetSongRow.WithDownloadState(new DownloadState.Waiting());
                         break;
 
                     default:
@@ -459,10 +322,10 @@ namespace TootTallySongDownloader
                 return;
             }
 
-            var link = FileHelper.GetDownloadLinkFromSongData(_song);
+            var link = FileHelper.GetDownloadLinkFromSongData(GetSong);
             if (link != null)
             {
-                _songRow.WithDownloadState(new DownloadState.Waiting());
+                GetSongRow.WithDownloadState(new DownloadState.Waiting());
                 SetFileData(
                     new FileDataState.WaitingOnRequest(
                         Plugin.Instance.StartCoroutine(TootTallyAPIService.GetFileSize(link, OnFileDataFetched))
@@ -471,7 +334,7 @@ namespace TootTallySongDownloader
             }
             else
             {
-                Plugin.LogWarning($"{_song.track_ref} cannot be downloaded: no download link found");
+                Plugin.LogWarning($"{GetSong.track_ref} cannot be downloaded: no download link found");
                 SetFileData(new FileDataState.ErrorFetchingData());
             }
         }
@@ -482,7 +345,7 @@ namespace TootTallySongDownloader
             {
                 if (!fileData.extension.Contains("zip"))
                 {
-                    Plugin.LogWarning($"{_song.track_ref} cannot be downloaded: File is not zip: {fileData.extension}");
+                    Plugin.LogWarning($"{GetSong.track_ref} cannot be downloaded: File is not zip: {fileData.extension}");
                     SetFileData(new FileDataState.ErrorFetchingData());
                 }
                 else
@@ -492,7 +355,7 @@ namespace TootTallySongDownloader
             }
             else
             {
-                Plugin.LogWarning($"{_song.track_ref} cannot be downloaded: got null FileData");
+                Plugin.LogWarning($"{GetSong.track_ref} cannot be downloaded: got null FileData");
             }
         }
     }

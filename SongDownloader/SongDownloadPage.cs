@@ -1,7 +1,9 @@
-﻿using HarmonyLib;
+﻿using BaboonAPI.Hooks.Tracks;
+using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using TootTallyCore;
 using TootTallyCore.APIServices;
 using TootTallyCore.Graphics;
 using TootTallyCore.Utils.Assets;
@@ -15,7 +17,7 @@ using static TootTallyCore.APIServices.SerializableClass;
 
 namespace TootTallySongDownloader
 {
-    internal class SongDownloadPage : TootTallySettingPage
+    public class SongDownloadPage : TootTallySettingPage
     {
         private const string DEFAULT_INPUT_TEXT = "SearchHere";
         private TMP_InputField _inputField;
@@ -25,8 +27,6 @@ namespace TootTallySongDownloader
         private Toggle _toggleRated, _toggleUnrated, _toggleNotOwned;
         private LoadingIcon _loadingIcon;
         private readonly List<string> _trackRefList;
-        private readonly List<string> _newDownloadedTrackRefs;
-        private readonly List<string> _deletedTrackRefs;
         private readonly List<SongDownloadObject> _downloadObjectList;
         public bool ShowNotOwnedOnly => _toggleNotOwned.isOn;
 
@@ -34,9 +34,8 @@ namespace TootTallySongDownloader
         public SongDownloadPage() : base("MoreSongs", "More Songs", 20f, new Color(0, 0, 0, 0.1f), GetButtonColors)
         {
             _trackRefList = new List<string>();
-            _newDownloadedTrackRefs = new List<string>();
-            _deletedTrackRefs = new List<string>();
             _downloadObjectList = new List<SongDownloadObject>();
+            SongDownloadManager.Init();
         }
 
         private static ColorBlock GetButtonColors => new ColorBlock()
@@ -75,26 +74,7 @@ namespace TootTallySongDownloader
             _downloadAllButton = GameObjectFactory.CreateCustomButton(_fullPanel.transform, new Vector2(-1330, -87), new Vector2(200, 60), "Download All", "DownloadAllButton", DownloadAll).gameObject;
             _downloadAllButton.SetActive(false);
 
-            _backButton.button.onClick.AddListener(() =>
-            {
-                if (_newDownloadedTrackRefs.Count > 0 || _deletedTrackRefs.Count > 0)
-                {
-                    TootTallyNotifManager.DisplayNotif("Reloading songs...");
-                    _newDownloadedTrackRefs.Clear();
-                    _deletedTrackRefs.Clear();
-                    TootTallyCore.Plugin.Instance.reloadManager.ReloadAll(new ProgressCallbacks
-                    {
-                        onComplete = delegate
-                        {
-                            TootTallyNotifManager.DisplayNotif("Reload complete!");
-                        },
-                        onError = err =>
-                        {
-                            TootTallyNotifManager.DisplayNotif($"Reloading failed! {err.Message}");
-                        },
-                    });
-                }
-            });
+            _backButton.button.onClick.AddListener(SongDownloadManager.ReloadSongIfNewSongDownloaded);
             _scrollableSliderHandler.accelerationMult = 0.09f;
 
             // TODO: Do we want to rely on this?
@@ -139,8 +119,6 @@ namespace TootTallySongDownloader
                 Plugin.Instance.StartCoroutine(TootTallyAPIService.SearchSongByURL(input, OnSearchInfoRecieved));
 
         }
-
-#nullable enable
 
         private void OnSearchInfoRecieved(SongInfoFromDB? searchInfo)
         {
@@ -190,22 +168,5 @@ namespace TootTallySongDownloader
         {
             _downloadObjectList.ForEach(x => x.SetActive(!(value && x.IsOwned)));
         }
-
-        internal void AddTrackRefToDownloadedSong(string trackref)
-        {
-            _newDownloadedTrackRefs.Add(trackref);
-            _deletedTrackRefs.Remove(trackref);
-        }
-
-        internal void MarkTrackDeleted(string trackref)
-        {
-            _deletedTrackRefs.Add(trackref);
-            _newDownloadedTrackRefs.Remove(trackref);
-        }
-
-        public bool IsAlreadyDownloaded(string trackref) => _newDownloadedTrackRefs.Contains(trackref);
-        public bool WasTrackDeleted(string trackref) => _deletedTrackRefs.Contains(trackref);
-
-#nullable disable
     }
 }
