@@ -16,6 +16,7 @@ using TootTallyCore.Graphics.ProgressCounters;
 using TootTallyCore.Utils.Helpers;
 using TootTallyCore.Utils.TootTallyNotifs;
 using TrombLoader.CustomTracks;
+using UnityEngine;
 
 namespace TootTallySongDownloader.SongDownloader
 {
@@ -42,12 +43,21 @@ namespace TootTallySongDownloader.SongDownloader
             if (_newDownloadedTrackRefs.Count == 0 && _deletedTrackRefs.Count == 0) return;
 
             TootTallyNotifManager.DisplayNotif("Reloading songs...");
+            var folderCount = Directory.GetDirectories(Path.Combine(Paths.BepInExRootPath, "CustomSongs")).Count();
+            var notif = TootTallyNotifManager.ManualNotif($"Reloading songs...\n 0 / {folderCount}", Color.white);
             _newDownloadedTrackRefs.Clear();
             _deletedTrackRefs.Clear();
             TootTallyCore.Plugin.Instance.reloadManager.ReloadAll(new ProgressCallbacks
             {
+                
+                onProgress = prog =>
+                {
+                    if (prog is Progress.LoadingTracks loadingTrack)
+                        notif.SetText($"Reloading songs...\n {loadingTrack.Item.loaded} / {folderCount}");
+                },
                 onComplete = delegate
                 {
+                    notif.Dispose();
                     TootTallyNotifManager.DisplayNotif("Reload complete!");
                 },
                 onError = err =>
