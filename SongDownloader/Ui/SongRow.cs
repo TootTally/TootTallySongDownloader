@@ -18,6 +18,7 @@ public class SongRow : IDisposable
     private readonly MainBody _mainBody;
     private readonly MoreInfoButton _moreInfoButton;
     private readonly DownloadButton _downloadButton;
+    public bool IsDownloading => _downloadButton.IsDownloading;
 
     /// <summary>
     /// Private ctor, use <c>Create</c> instead

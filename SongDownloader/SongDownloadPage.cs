@@ -96,9 +96,11 @@ namespace TootTallySongDownloader
         {
             if (input == DEFAULT_INPUT_TEXT)
                 input = "";
-            _downloadObjectList.Clear();
+            _downloadObjectList.RemoveAll(o => !o.IsDownloading);
             _downloadAllButton.SetActive(false);
-            RemoveAllObjects();
+            //RemoveAllObjects();
+            RemoveConditionalObjects(baseObject => (baseObject is SongDownloadObject) && !(baseObject as SongDownloadObject).IsDownloading);
+
             _searchButton.SetActive(false);
             _loadingIcon.Show();
             if (_nextButton != null)

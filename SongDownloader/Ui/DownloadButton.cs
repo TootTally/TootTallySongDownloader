@@ -24,7 +24,7 @@ public class DownloadButton
     private readonly ProgressPieGraphic _progressPie;
 
     private DownloadState _downloadState = new DownloadState.Waiting();
-
+    public bool IsDownloading => _downloadState is DownloadState.Downloading;
     /// <summary>
     /// Private ctor, use <c>Create</c> instead
     /// </summary>

@@ -70,6 +70,7 @@ namespace TootTallySongDownloader
         public SongDataFromDB GetSong { get; private set; }
         private readonly SongDownloadPage _songDownloadPage;
         public bool IsOwned;
+        public bool IsDownloading => GetSongRow.IsDownloading;
 
         public bool IsDownloadAvailable => !IsOwned && _fileData is FileDataState.HasData;
 
